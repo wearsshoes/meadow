@@ -1,0 +1,6 @@
+pystray==0.19.5
+pillow==11.0.0
+schedule==1.2.1
+anthropic==0.3.11
+pyobjc-framework-Quartz>=9.0
+flask==3.0.3
