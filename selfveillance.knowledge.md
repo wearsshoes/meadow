@@ -18,6 +18,16 @@ A macOS menubar app that periodically captures and analyzes your screen activity
 - Keep modules focused and independent
 - Avoid circular dependencies
 
+## Core Design Principles
+- Event-driven monitoring over fixed intervals
+  - Capture on window/app changes rather than time-based
+  - Use polling to detect context switches
+  - Reset monitoring intervals when context changes
+- Clean UI
+  - Keep menubar icon simple
+  - Put detailed status in menu
+  - Avoid cluttering system UI
+
 ## Core Dependencies
 - rumps 0.4.0 - macOS menubar app framework
 - pillow 11.0.0 - Image processing
@@ -41,10 +51,14 @@ A macOS menubar app that periodically captures and analyzes your screen activity
 
 ## Features
 - Menubar interface with screenshot controls
-- Configurable screenshot intervals
+- Context-aware screenshot capture
+  - Captures on window/app changes
+  - Configurable time-based intervals
+  - Interval resets on context changes
 - Automatic screenshot capture and Claude analysis
-  - Analysis performed on both manual and interval-based captures
+  - Analysis performed on both manual and context-based captures
   - Each screenshot analyzed immediately after capture
+  - Analysis includes previous action context
 - Analysis logs stored as JSON
 - Screenshots saved with timestamps
 

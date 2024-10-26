@@ -26,6 +26,8 @@ class ScreenMonitorApp(rumps.App):
         self.setup_menu()
         self.is_monitoring = False
         self.next_screenshot = None
+        self.last_window_info = None
+        self.timer_menu_item = None
 
     def setup_config(self):
         """Initialize configuration settings"""
@@ -46,9 +48,12 @@ class ScreenMonitorApp(rumps.App):
 
     def setup_menu(self):
         """Setup menu items"""
+        self.timer_menu_item = rumps.MenuItem("Next capture: --")
         self.menu = [
             "Start Monitoring",
             "Stop Monitoring",
+            None,
+            self.timer_menu_item,
             None,
             "Analyze Current Screen",
             None,
@@ -170,19 +175,22 @@ class ScreenMonitorApp(rumps.App):
 
     def monitoring_loop(self):
         """Main monitoring loop"""
-        screenshot, _, _, _ = self.take_screenshot()
         self.next_screenshot = time.time() + self.config['interval']
+        self.last_window_info = self.get_active_window_info()
 
         while self.is_monitoring:
+            current_window = self.get_active_window_info()
             remaining = max(0, round(self.next_screenshot - time.time()))
-            self.title = f"📸 {remaining}s"
+            self.timer_menu_item.title = f"Next capture: {remaining}s"
 
-            if time.time() >= self.next_screenshot:
+            # Take screenshot on window change or interval
+            if (current_window != self.last_window_info) or (time.time() >= self.next_screenshot):
                 screenshot, filename, timestamp, window_info = self.take_screenshot()
                 threading.Thread(target=self.analyze_image, args=(screenshot, filename, timestamp, window_info)).start()
-                self.next_screenshot += self.config['interval']
+                self.next_screenshot = time.time() + self.config['interval']
+                self.last_window_info = current_window
 
-            time.sleep(0.1)
+            time.sleep(1)
 
     @rumps.clicked("Analyze Current Screen")
     def take_screenshot_and_analyze(self, _):
@@ -200,6 +208,7 @@ class ScreenMonitorApp(rumps.App):
     def stop_monitoring(self, _):
         self.is_monitoring = False
         self.title = "📸"
+        self.timer_menu_item.title = "Next capture: --"
 
     @rumps.clicked("Set Interval")
     def set_interval(self, _):
