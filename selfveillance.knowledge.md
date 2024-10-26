@@ -30,6 +30,15 @@ A macOS menubar app that periodically captures and analyzes your screen activity
 
 ## Core Dependencies
 - rumps 0.4.0 - macOS menubar app framework
+  - Menu items must be initialized in __init__ before setup_menu is called
+  - Dynamic menu items (like timers) should be class attributes
+  - Example:
+    ```python
+    def __init__(self):
+        self.timer_item = rumps.MenuItem("Timer: --")
+        super().__init__("Title", menu=[self.timer_item])
+    ```
+- rumps 0.4.0 - macOS menubar app framework
 - pillow 11.0.0 - Image processing
 - anthropic 0.37.1 - Claude API client
 - pyobjc-framework-Quartz - Native macOS window management
@@ -129,6 +138,12 @@ messages=[{
 
 ## Known Issues
 - Additional permissions may be required for menubar/screen access
+- Rumps menu items must be initialized in specific order:
+  1. Declare as None in __init__
+  2. Create MenuItem instance in setup_menu
+  3. Add to menu list
+  - Common error: NoneType if not properly initialized
+  - Reason: Rumps menu item lifecycle tied to app initialization
 - pygetwindow provides limited window information on macOS
   - Does not properly separate app name from window title
   - Consider using Quartz/CoreGraphics APIs instead:

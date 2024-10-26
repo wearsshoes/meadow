@@ -21,13 +21,13 @@ from anthropic import Anthropic
 
 class ScreenMonitorApp(rumps.App):
     def __init__(self):
+        self.timer_menu_item = None  # Initialize before super().__init__
         super().__init__("📸")
         self.setup_config()
         self.setup_menu()
         self.is_monitoring = False
         self.next_screenshot = None
         self.last_window_info = None
-        self.timer_menu_item = None
 
     def setup_config(self):
         """Initialize configuration settings"""
