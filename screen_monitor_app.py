@@ -93,27 +93,6 @@ class ScreenMonitorApp(rumps.App):
             img_str = base64.b64encode(buffered.getvalue()).decode()
 
             client = Anthropic()
-            message = client.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                max_tokens=1000,
-                messages=[{
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": "image/png",
-                                "data": img_str
-                            }
-                        },
-                        {
-                            "type": "text",
-                            "text": f"In one sentence, describe the main action the user is taking starting with an active verb (e.g. 'Reading'). Active window: {window_info['title']}"
-                        }
-                    ]
-                }]
-            )
 
             # Get previous action for context
             try:
