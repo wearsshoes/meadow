@@ -222,7 +222,8 @@ class ScreenMonitorApp(rumps.App):
                 if new_interval > 0:
                     self.config['interval'] = new_interval
                     self.save_config()
-                    if self.is_monitoring:
+                    was_monitoring = self.is_monitoring
+                    if was_monitoring:
                         self.stop_monitoring(None)
                         self.start_monitoring(None)
             except ValueError:

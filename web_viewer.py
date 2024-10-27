@@ -7,8 +7,6 @@ import io
 
 app = Flask(__name__)
 
-
-
 # Cache for thumbnails
 thumbnail_cache = {}
 

@@ -19,6 +19,18 @@ A macOS menubar app that periodically captures and analyzes your screen activity
 - Avoid circular dependencies
 
 ## Core Design Principles
+- State Management
+  - Monitor state transitions carefully
+  - Potential race conditions:
+    - During manual analysis while monitoring is active
+    - When changing intervals while monitoring is active
+  - Always verify monitoring state before starting/stopping
+  - Reset monitoring state when:
+    - Manual analysis completes
+    - Interval changes
+  - Preserve monitoring state across setting changes
+  - Only start/stop monitoring through explicit user actions
+  - Settings changes should not affect monitoring state
 - Web viewer organization
   - Separate HTML, CSS, and JS into distinct sections/files
   - Keep template logic separate from Python code
