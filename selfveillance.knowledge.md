@@ -52,6 +52,10 @@ A macOS menubar app that periodically captures and analyzes your screen activity
 - Use native macOS APIs (via pyobjc) over cross-platform alternatives
   - More reliable window/app information
   - Better integration with OS
+- Use Flask's render_template_string over render_template
+  - Keep template handling simple and self-contained
+  - Avoid filesystem template loading complexity
+  - Templates stay with their related Python code
 
 ## Window Management
 - Use Quartz/CoreGraphics APIs for window info:

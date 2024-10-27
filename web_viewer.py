@@ -1,6 +1,6 @@
 from flask import Flask, render_template_string
-import json
 import os
+import json
 import base64
 from PIL import Image
 import io
@@ -48,7 +48,11 @@ def view_log():
     # Sort by timestamp, most recent first
     entries.sort(key=lambda x: x['timestamp'], reverse=True)
 
-    return render_template_string('viewer.html', entries=entries)
+    # Read the template file
+    template_path = os.path.join(os.path.dirname(__file__), 'templates', 'viewer.html')
+    with open(template_path, 'r') as f:
+        template_content = f.read()
+    return render_template_string(template_content, entries=entries)
 
 def start_viewer():
     """Start the Flask server"""
