@@ -7,59 +7,7 @@ import io
 
 app = Flask(__name__)
 
-HTML_TEMPLATE = '''
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Screenshot Analysis Viewer</title>
-    <meta http-equiv="refresh" content="10">
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
-            background-color: #f5f5f5;
-        }
-        .thumbnail {
-            max-width: 200px;
-            max-height: 150px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Screenshot Analysis Log</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>Screenshot</th>
-                <th>Time</th>
-                <th>App</th>
-                <th>Window Title</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for entry in entries %}
-            <tr>
-                <td><img class="thumbnail" src="data:image/png;base64,{{ entry.thumbnail }}" /></td>
-                <td>{{ entry.timestamp }}</td>
-                <td>{{ entry.app }}</td>
-                <td>{{ entry.window }}</td>
-                <td>{{ entry.description }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-</html>
-'''
+
 
 # Cache for thumbnails
 thumbnail_cache = {}
@@ -100,7 +48,7 @@ def view_log():
     # Sort by timestamp, most recent first
     entries.sort(key=lambda x: x['timestamp'], reverse=True)
 
-    return render_template_string(HTML_TEMPLATE, entries=entries)
+    return render_template_string('viewer.html', entries=entries)
 
 def start_viewer():
     """Start the Flask server"""

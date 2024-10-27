@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Screenshot Analysis Viewer</title>
+    <meta http-equiv="refresh" content="10">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <h1>Screenshot Analysis Log</h1>
+    <table id="screenshotTable">
+        <thead>
+            <tr>
+                <th>Screenshot</th>
+                <th onclick="sortTable(1, 'timestamp')">Time</th>
+                <th onclick="sortTable(2, 'text')">App</th>
+                <th>Window Title</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in entries %}
+            <tr>
+                <td><img class="thumbnail" src="data:image/png;base64,{{ entry.thumbnail }}" /></td>
+                <td>{{ entry.timestamp }}</td>
+                <td>{{ entry.app }}</td>
+                <td>{{ entry.window }}</td>
+                <td>{{ entry.description }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script src="{{ url_for('static', filename='js/sort.js') }}"></script>
+</body>
+</html>

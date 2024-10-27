@@ -19,6 +19,11 @@ A macOS menubar app that periodically captures and analyzes your screen activity
 - Avoid circular dependencies
 
 ## Core Design Principles
+- Web viewer organization
+  - Separate HTML, CSS, and JS into distinct sections/files
+  - Keep template logic separate from Python code
+  - Avoid embedding large chunks of frontend code in string literals
+  - Use static files for frontend assets when possible
 - Event-driven monitoring over fixed intervals
   - Capture on window/app changes rather than time-based
   - Use polling to detect context switches
