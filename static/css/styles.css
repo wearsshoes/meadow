@@ -55,3 +55,32 @@ th.desc::after {
     max-width: 200px;
     max-height: 150px;
 }
+
+/* Settings styles */
+.setting-group {
+    margin: 20px 0;
+}
+
+.setting-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.setting-group input {
+    padding: 5px;
+    border: 1px solid var(--table-border);
+    background: var(--bg-color);
+    color: var(--text-color);
+}
+
+button {
+    padding: 8px 16px;
+    background: var(--header-bg);
+    border: 1px solid var(--table-border);
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+button:hover {
+    background: var(--header-hover);
+}

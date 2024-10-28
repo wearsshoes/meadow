@@ -10,6 +10,7 @@ import json
 import base64
 from datetime import datetime
 import webbrowser
+
 from PIL import ImageGrab, Image
 from Quartz import (
     CGWindowListCopyWindowInfo,
@@ -33,6 +34,7 @@ class MenubarApp(rumps.App):
 
     def __init__(self):
         self.timer_menu_item = None  # Initialize before super().__init__
+        self.config = None  # Initialize config attribute
         super().__init__("📸")
         self.setup_config()
         self.setup_menu()
@@ -94,11 +96,11 @@ class MenubarApp(rumps.App):
             None,
             "Analyze Current Screen",
             None,
-            "Set Interval",
             "Open Screenshots Folder",
-            "Set Screenshots Folder",
-            "Set Notes Folder",
+            "Open Notes Folder",
             "Open Web Viewer",
+            "Settings",
+            None,
         ]
 
     def get_active_window_info(self):
@@ -116,6 +118,19 @@ class MenubarApp(rumps.App):
         """Save current configuration to file"""
         with open(self.config_path, 'w', encoding='utf-8') as f:
             json.dump(self.config, f)
+
+    def check_config_changes(self, _):
+        """Check for config changes and reload if needed"""
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                new_config = json.load(f)
+                if new_config != self.config:
+                    self.config = new_config
+                    if self.is_monitoring:
+                        self.stop_monitoring(None)
+                        self.start_monitoring(None)
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
 
     def take_screenshot(self):
         """Capture and save a screenshot, returns (screenshot, filename, timestamp, window_info)"""
@@ -244,56 +259,25 @@ class MenubarApp(rumps.App):
         self.title = "📸"
         self.timer_menu_item.title = "Next capture: --"
 
-    @rumps.clicked("Set Interval")
-    def set_interval(self, _):
-        """Display dialog to set screenshot interval in seconds."""
-        cmd = f'''osascript -e 'Tell application "System Events" to display dialog "Enter interval in seconds:" \
-                default answer "{self.config["interval"]}" with title "Set Screenshot Interval"' '''
-        result = os.popen(cmd).read()
+    def show_settings(self):
+        """Open settings in web viewer"""
+        webbrowser.open('http://localhost:5050/settings')
 
-        if "button returned:OK" in result:
-            try:
-                new_interval = int(result.split("text returned:")[1].strip())
-                if new_interval > 0:
-                    self.config['interval'] = new_interval
-                    self.save_config()
-                    was_monitoring = self.is_monitoring
-                    if was_monitoring:
-                        self.stop_monitoring(None)
-                        self.start_monitoring(None)
-            except ValueError:
-                pass
+    @rumps.clicked("Settings")
+    def set_interval(self, _):
+        """Display settings window for interval configuration."""
+        # Run settings window in separate thread to avoid blocking menubar
+        threading.Thread(target=self.show_settings).start()
 
     @rumps.clicked("Open Screenshots Folder")
     def open_screenshots(self, _):
         """Open the screenshots directory in Finder."""
         subprocess.run(['open', self.config['screenshot_dir']], check=True)
 
-    @rumps.clicked("Set Screenshots Folder")
-    def set_screenshots_folder(self, _):
-        """Display Finder dialog to set screenshots directory."""
-        cmd = '''osascript -e 'choose folder with prompt "Select Screenshots Folder"' '''
-        result = os.popen(cmd).read().strip()
-
-        if result:
-            # Remove 'alias ' prefix and ':' suffix that Apple script adds
-            new_path = result.replace('alias ', '').rstrip(':')
-            self.config['screenshot_dir'] = new_path
-            os.makedirs(new_path, exist_ok=True)
-            self.save_config()
-
-    @rumps.clicked("Set Notes Folder")
-    def set_notes_folder(self, _):
-        """Display Finder dialog to set notes directory."""
-        cmd = '''osascript -e 'choose folder with prompt "Select Notes Folder"' '''
-        result = os.popen(cmd).read().strip()
-
-        if result:
-            # Remove 'alias ' prefix and ':' suffix that Apple script adds
-            new_path = result.replace('alias ', '').rstrip(':')
-            self.config['notes_dir'] = new_path
-            os.makedirs(new_path, exist_ok=True)
-            self.save_config()
+    @rumps.clicked("Open Notes Folder")
+    def open_notes(self, _):
+        """Open the notes directory in Finder."""
+        subprocess.run(['open', self.config['notes_dir']], check=True)
 
     @rumps.clicked("Open Web Viewer")
     def open_web_viewer(self, _):

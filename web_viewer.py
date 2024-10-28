@@ -7,7 +7,7 @@ import os
 import json
 import base64
 from PIL import Image
-from flask import Flask, render_template_string
+from flask import Flask, redirect, render_template_string, request, url_for, jsonify
 
 app = Flask(__name__)
 
@@ -33,6 +33,17 @@ def get_thumbnail_base64(image_path):
         print(f"Error creating thumbnail for {image_path}: {e}")
         return ""
 
+@app.route('/pick_folder')
+def pick_folder():
+    """Handle macOS folder picker dialog"""
+    cmd = '''osascript -e 'choose folder with prompt "Select Folder"' '''
+    result = os.popen(cmd).read().strip()
+    if result:
+        # Convert from AppleScript path format to Unix path
+        path = result.replace('alias Macintosh HD:', '/').replace(':', '/')
+        return jsonify({'path': path})
+    return jsonify({'path': None})
+
 @app.route('/')
 def view_log():
     """
@@ -49,8 +60,9 @@ def view_log():
     for entry in entries:
         entry['thumbnail'] = get_thumbnail_base64(entry['filepath'])
 
-    # Sort by timestamp, most recent first
+    # Sort by timestamp and limit to most recent 20 entries
     entries.sort(key=lambda x: x['timestamp'], reverse=True)
+    entries = entries[:20]  # Only show most recent 20 entries initially
 
     # Read the template file
     template_path = os.path.join(os.path.dirname(__file__), 'templates', 'viewer.html')
@@ -58,9 +70,51 @@ def view_log():
         template_content = f.read()
     return render_template_string(template_content, entries=entries)
 
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+    """Handle settings page and form submission"""
+    app_dir = os.path.expanduser('~/Library/Application Support/ReThread')
+    config_path = os.path.join(app_dir, 'config', 'config.json')
+
+    if request.method == 'POST':
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+
+            if 'interval' in request.form:
+                new_interval = int(request.form['interval'])
+                if new_interval > 0:
+                    config['interval'] = new_interval
+
+            if 'screenshot_dir' in request.form:
+                new_dir = request.form['screenshot_dir']
+                if new_dir:
+                    config['screenshot_dir'] = new_dir
+                    os.makedirs(new_dir, exist_ok=True)
+
+            if 'notes_dir' in request.form:
+                new_dir = request.form['notes_dir']
+                if new_dir:
+                    config['notes_dir'] = new_dir
+                    os.makedirs(new_dir, exist_ok=True)
+
+            with open(config_path, 'w', encoding='utf-8') as f:
+                json.dump(config, f)
+            return redirect(url_for('settings'))
+        except (ValueError, KeyError):
+            pass
+
+    with open(config_path, 'r', encoding='utf-8') as f:
+        config = json.load(f)
+
+    template_path = os.path.join(os.path.dirname(__file__), 'templates', 'settings.html')
+    with open(template_path, 'r', encoding='utf-8') as f:
+        template_content = f.read()
+    return render_template_string(template_content, interval=config['interval'], config=config)
+
 def start_viewer():
     """Start the Flask server"""
-    app.run(port=5050)
+    app.run(port=5050, debug=True, use_reloader=False)  # use_reloader=False because we're in a thread
 
 if __name__ == '__main__':
     app.run(port=5050)
