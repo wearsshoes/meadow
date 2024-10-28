@@ -1,28 +1,14 @@
-# pylint: disable=no-name-in-module
+
 """Menubar app for screen monitoring using rumps and Quartz"""
 
-import io
 import os
 import threading
 import subprocess
-import time
 import json
-import base64
-from datetime import datetime
 import webbrowser
-
-from PIL import ImageGrab, Image
-from Quartz import (
-    CGWindowListCopyWindowInfo,
-    kCGWindowListOptionOnScreenOnly,
-    kCGNullWindowID,
-    kCGWindowIsOnscreen,
-    kCGWindowLayer,
-    kCGWindowOwnerName,
-    kCGWindowName
-)
-from anthropic import Anthropic, AnthropicError
 import rumps
+from monitor import monitoring_loop, take_screenshot
+from analyzer import analyze_image
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-locals
@@ -103,17 +89,6 @@ class MenubarApp(rumps.App):
             None,
         ]
 
-    def get_active_window_info(self):
-        """Get active window info using Quartz"""
-        window_list = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID)
-        for window in window_list:
-            if window.get(kCGWindowIsOnscreen) and window.get(kCGWindowLayer, 0) == 0:
-                return {
-                    'app': window.get(kCGWindowOwnerName, 'Unknown App'),
-                    'title': window.get(kCGWindowName, 'No Title')
-                }
-        return {'app': 'Unknown App', 'title': 'No Title'}
-
     def save_config(self):
         """Save current configuration to file"""
         with open(self.config_path, 'w', encoding='utf-8') as f:
@@ -131,65 +106,6 @@ class MenubarApp(rumps.App):
                         self.start_monitoring(None)
         except (FileNotFoundError, json.JSONDecodeError):
             pass
-
-    def take_screenshot(self):
-        """Capture and save a screenshot, returns (screenshot, filename, timestamp, window_info)"""
-        screenshot = ImageGrab.grab()
-        timestamp = datetime.now()
-        window_info = self.get_active_window_info()
-        filename = os.path.join(self.config['screenshot_dir'], f"screenshot_{timestamp.strftime('%Y%m%d_%H%M%S')}.png")
-        screenshot.save(filename)
-        return screenshot, filename, timestamp, window_info
-
-    def analyze_image(self, screenshot, filename, timestamp, window_info):
-        """Analyze screenshot using Claude API"""
-        try:
-            max_size = (1344, 896)
-            screenshot.thumbnail(max_size, Image.Resampling.LANCZOS)
-
-            buffered = io.BytesIO()
-            screenshot.save(buffered, format="PNG")
-            img_str = base64.b64encode(buffered.getvalue()).decode()
-
-            client = Anthropic()
-
-            # Get previous action for context
-            try:
-                log_path = os.path.join(self.config['screenshot_dir'], 'analysis_log.json')
-                with open(log_path, 'r', encoding='utf-8') as f:
-                    logs = json.load(f)
-                    prev_description = logs[-1]['description'] if logs else "N/A"
-            except (FileNotFoundError, json.JSONDecodeError, IndexError):
-                prev_description = "N/A"
-
-            # Include previous action in prompt
-            message = client.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                max_tokens=1000,
-                messages=[{
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": "image/png",
-                                "data": img_str
-                            }
-                        },
-                        {
-                            "type": "text",
-                            "text": f"In one sentence, describe the main action the user is taking starting with an active verb (e.g. 'Reading'). Active window: {window_info['title']}. Previous action: {prev_description}"
-                        }
-                    ]
-                }]
-            )
-
-            description = message.content[0].text if message.content else "No description available"
-            self.log_analysis(filename, description, timestamp, window_info)
-
-        except (AnthropicError, IOError, ValueError) as e:
-            print(f"Error in analyze_image: {str(e)}")
 
     def log_analysis(self, filename, description, timestamp, window_info):
         """Log analysis results to JSON file"""
@@ -214,36 +130,22 @@ class MenubarApp(rumps.App):
         with open(log_path, 'w', encoding='utf-8') as f:
             json.dump(logs, f, indent=2)
 
-    def analyze_and_restore(self, screenshot, filename, timestamp, window_info):
-        """Analyze screenshot and restore app icon"""
-        self.analyze_image(screenshot, filename, timestamp, window_info)
-        self.title = "📸"
-
     def monitoring_loop(self):
         """Main monitoring loop"""
-        self.next_screenshot = time.time() + self.config['interval']
-        self.last_window_info = self.get_active_window_info()
-
-        while self.is_monitoring:
-            current_window = self.get_active_window_info()
-            remaining = max(0, round(self.next_screenshot - time.time()))
-            self.timer_menu_item.title = f"Next capture: {remaining}s"
-
-            # Take screenshot on window change or interval
-            if (current_window != self.last_window_info) or (time.time() >= self.next_screenshot):
-                screenshot, filename, timestamp, window_info = self.take_screenshot()
-                threading.Thread(target=self.analyze_image, args=(screenshot, filename, timestamp, window_info)).start()
-                self.next_screenshot = time.time() + self.config['interval']
-                self.last_window_info = current_window
-
-            time.sleep(1)
+        monitoring_loop(self.config, self.timer_menu_item, self.is_monitoring, self.data_dir)
 
     @rumps.clicked("Analyze Current Screen")
     def take_screenshot_and_analyze(self, _):
         """Take and analyze a screenshot of the current screen."""
         self.title = "📸 Analyzing..."
-        screenshot, filename, timestamp, window_info = self.take_screenshot()
-        threading.Thread(target=self.analyze_and_restore, args=(screenshot, filename, timestamp, window_info)).start()
+        screenshot, filename, timestamp, window_info = take_screenshot(self.config['screenshot_dir'])
+        log_path = os.path.join(self.data_dir, 'logs', 'analysis_log.json')
+
+        def analyze_and_restore():
+            analyze_image(screenshot, filename, timestamp, window_info, log_path)
+            self.title = "📸"
+
+        threading.Thread(target=analyze_and_restore).start()
 
     @rumps.clicked("Start Monitoring")
     def start_monitoring(self, _):

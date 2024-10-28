@@ -36,9 +36,75 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 Note: When updating dependencies, check for async/await usage in the codebase as these require explicit asyncio support
 
 ## Architecture
-- Separate concerns into distinct modules
-- Keep modules focused and independent
-- Use native macOS APIs for window management
+- Process Separation
+  - Run Flask server in separate process
+  - Use process.terminate() for clean shutdown
+  - Avoid signal handlers for inter-process communication
+  - Keep UI responsive by offloading heavy tasks
+
+- Module Organization
+  - menubar_app.py: UI and coordination only
+    - No direct file or API operations 
+    - No business logic
+    - Only coordinates between modules
+  - monitor.py: Screen capture and monitoring
+    - Window tracking
+    - Screenshot management
+    - Monitoring loop and timing
+    - All window/screen related operations
+  - analyzer.py: Analysis and logging
+    - Claude API integration
+    - Image analysis
+    - Log management and persistence
+    - All analysis related operations
+  - web_viewer.py: Research visualization
+    - Flask server
+    - Log display
+    - Settings interface
+
+- Module Principles
+  - Group related functionality in same module
+  - Keep clear boundaries between modules
+  - Avoid circular dependencies
+  - Minimize cross-module knowledge
+
+- Design Patterns
+  - Single Responsibility: Each module handles one aspect
+  - Clean Interfaces: Pass data, not dependencies
+  - Minimal Redundancy: No duplicate code between modules
+  - Process over Threads: Use multiprocessing for isolation
+
+- Module Organization
+  - menubar_app.py: UI and coordination only
+    - No direct file or API operations 
+    - No business logic
+    - Only coordinates between modules
+  - monitor.py: Screen capture and monitoring
+    - Window tracking
+    - Screenshot management
+    - Monitoring loop and timing
+    - All window/screen related operations
+  - analyzer.py: Analysis and logging
+    - Claude API integration
+    - Image analysis
+    - Log management and persistence
+    - All analysis related operations
+  - web_viewer.py: Research visualization
+    - Flask server
+    - Log display
+    - Settings interface
+
+- Module Principles
+  - Group related functionality in same module
+  - Keep clear boundaries between modules
+  - Avoid circular dependencies
+  - Minimize cross-module knowledge
+
+- Design Patterns
+  - Single Responsibility: Each module handles one aspect
+  - Clean Interfaces: Pass data, not dependencies
+  - Minimal Redundancy: No duplicate code between modules
+  - Process over Threads: Use multiprocessing for isolation
 
 ## Data Structure
 
