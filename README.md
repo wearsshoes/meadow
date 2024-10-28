@@ -1,12 +1,12 @@
-```markdown
 # ReThread
-macOS menubar app that acts as an AI research assistant by analyzing your screen activity using Claude API.
+A macOS menubar app that acts as an AI research assistant by analyzing your screen activity using Claude API.
 
 ## Features
-- Menubar interface with research tracking controls
-- Configurable analysis intervals
-- Automatic screen analysis and research outline generation
-- Web viewer for browsing research progress
+- Automatic screenshot analysis and research note generation
+- Topic-based content filtering and organization
+- Web interface for browsing research logs
+- Configurable monitoring intervals and directories
+- Local data storage and privacy
 
 ## Setup
 1. Install dependencies:
@@ -14,20 +14,15 @@ macOS menubar app that acts as an AI research assistant by analyzing your screen
 pip install -r requirements.txt
 ```
 
-2. Set ANTHROPIC_API_KEY environment variable with your Claude API key
+2. Set ANTHROPIC_API_KEY environment variable
 
-3. Run the app:
+3. Run:
 ```bash
-python main.py
+python src/rethread/main.py
 ```
 
-## Configuration
-- Config stored in ~/.screen_monitor_config.json
-- Screenshots saved to ~/screen_monitor_screenshots
-- Analysis logs saved as analysis_log.json in screenshots directory
-
-## System Requirements
-- macOS only (rumps dependency)
-- Screen recording permissions required
+## Requirements
+- macOS
 - Python 3.x
-```
+- Screen recording permissions
+- Anthropic API key
