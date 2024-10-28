@@ -71,7 +71,6 @@ def analyze_image(screenshot, filename, timestamp, window_info, log_path):
 
                         <action>Brief description of main user action, starting with an active verb</action>
                         <topic>Which research topic this relates to, or "none" if not relevant: {', '.join(window_info.get('research_topics', ['civic government']))}</topic>
-                        <relevance>true or false, whether content relates to any research topic</relevance>
                         <summary>If relevant, one paragraph summary of the relevant content. If not relevant, leave empty.</summary>
 
                         Active window: {window_info['title']}
@@ -92,8 +91,7 @@ def analyze_image(screenshot, filename, timestamp, window_info, log_path):
 
             action = extract_tag('action', response) or "Error parsing response"
             topic = extract_tag('topic', response)
-            is_relevant = (extract_tag('relevance', response) or 'false').lower() == 'true'
-            summary = extract_tag('summary', response) if is_relevant else None
+            summary = extract_tag('summary', response) if topic != "none" else None
         except (AttributeError, ValueError):
             action = "Error parsing response"
             summary = None
