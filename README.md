@@ -1,4 +1,4 @@
-# ReThread
+# Meadow
 A macOS menubar app that acts as an AI research assistant by analyzing your screen activity using Claude API.
 
 ## Features
@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 3. Run:
 ```bash
-python src/rethread/main.py
+python src/meadow/main.py
 ```
 
 ## Requirements

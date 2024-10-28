@@ -34,7 +34,7 @@ class MenubarApp(rumps.App):
     def setup_config(self):
         """Initialize configuration settings"""
         # Set up application directories
-        self.app_dir = os.path.expanduser('~/Library/Application Support/ReThread')
+        self.app_dir = os.path.expanduser('~/Library/Application Support/Meadow')
         self.config_dir = os.path.join(self.app_dir, 'config')
         self.data_dir = os.path.join(self.app_dir, 'data')
         self.cache_dir = os.path.join(self.app_dir, 'cache')

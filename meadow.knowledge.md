@@ -1,4 +1,4 @@
-# ReThread
+# Meadow
 A macOS menubar app that acts as an AI research assistant by analyzing your screen activity using Claude API.
 
 ## Project Mission
@@ -11,7 +11,7 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Co-locate related data
   - Keep research logs with research notes
   - Separate application data from user content
-- Skip automatic screenshots of ReThread's own interface
+- Skip automatic screenshots of Meadow's own interface
 - Prefer simple solutions over complex ones
 - Use multiprocessing for clean process separation
 
@@ -38,7 +38,7 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
   - Maintaining knowledge graph connections
 
 ## Data Storage
-Application data in ~/Library/Application Support/ReThread/:
+Application data in ~/Library/Application Support/Meadow/:
 - config/config.json - User preferences
 - data/screenshots/ - Screenshot images
 - data/logs/ - Analysis logs
