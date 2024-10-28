@@ -12,7 +12,28 @@
             <label for="research_topic">Research Topic</label>
             <input type="text" name="research_topic" value="{{ config['research_topic'] }}">
         </div>
+        <div class="setting-group">
+            <label for="screenshot_dir">Screenshots Directory</label>
+            <input type="text" name="screenshot_dir" value="{{ config['screenshot_dir'] }}">
+            <button type="button" onclick="pickFolder('screenshot_dir')">Choose Folder</button>
+        </div>
+        <div class="setting-group">
+            <label for="notes_dir">Notes Directory</label>
+            <input type="text" name="notes_dir" value="{{ config['notes_dir'] }}">
+            <button type="button" onclick="pickFolder('notes_dir')">Choose Folder</button>
+        </div>
         <button type="submit">Save Settings</button>
     </form>
 </div>
+<script>
+function pickFolder(inputName) {
+    fetch('/pick_folder')
+        .then(response => response.json())
+        .then(data => {
+            if (data.path) {
+                document.querySelector(`input[name="${inputName}"]`).value = data.path;
+            }
+        });
+}
+</script>
 {% endblock %}
