@@ -3,7 +3,7 @@
 <div class="container">
     <h1>ReThread Settings</h1>
     <p style="margin-bottom: 32px; color: #666;">Configure your research assistant preferences</p>
-    <div id="save-status" style="color: #666; margin-bottom: 32px;"></div>
+    <div id="save-status" class="save-notification">✓ Changes saved</div>
     <form>
         <div class="setting-group">
             <label for="interval">Screenshot Interval (seconds)</label>
@@ -16,16 +16,11 @@
         <div class="setting-group">
             <label for="screenshot_dir">Screenshots Directory</label>
             <input type="text" name="screenshot_dir" value="{{ config['screenshot_dir'] }}" onchange="saveSettings(this.form)">
-            <input type="file" id="screenshot_dir_picker" webkitdirectory style="display: none">
-            <button type="button" onclick="document.getElementById('screenshot_dir_picker').click()">Choose Folder</button>
         </div>
         <div class="setting-group">
             <label for="notes_dir">Notes Directory</label>
             <input type="text" name="notes_dir" value="{{ config['notes_dir'] }}" onchange="saveSettings(this.form)">
-            <input type="file" id="notes_dir_picker" webkitdirectory style="display: none">
-            <button type="button" onclick="document.getElementById('notes_dir_picker').click()">Choose Folder</button>
         </div>
     </form>
 </div>
-<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
 {% endblock %}
