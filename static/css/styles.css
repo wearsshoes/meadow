@@ -58,29 +58,54 @@ th.desc::after {
 
 /* Settings styles */
 .setting-group {
-    margin: 20px 0;
+    margin: 24px 0;
+    max-width: 600px;
 }
 
 .setting-group label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    font-weight: 500;
 }
 
 .setting-group input {
-    padding: 5px;
+    padding: 8px 12px;
     border: 1px solid var(--table-border);
+    border-radius: 6px;
     background: var(--bg-color);
     color: var(--text-color);
+    width: 100%;
+    font-size: 14px;
+}
+
+.setting-group input:focus {
+    outline: none;
+    border-color: #4a9eff;
+    box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
+}
+
+.setting-group button {
+    margin-top: 8px;
 }
 
 button {
     padding: 8px 16px;
-    background: var(--header-bg);
-    border: 1px solid var(--table-border);
-    color: var(--text-color);
+    background: #4a9eff;
+    border: none;
+    border-radius: 6px;
+    color: white;
     cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
 }
 
 button:hover {
-    background: var(--header-hover);
+    background: #3d8be6;
+}
+
+button[type="submit"] {
+    margin-top: 32px;
+    width: 100%;
+    max-width: 600px;
+    padding: 12px;
 }

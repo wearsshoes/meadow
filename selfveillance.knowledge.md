@@ -12,6 +12,10 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Keep all data private and local
 
 ## Core Design Principles
+- Architecture
+  - Prefer simple solutions over complex ones
+  - Use multiprocessing for clean process separation
+  - Avoid complex coordination mechanisms (signals, events, etc)
 - Clean UI
   - Keep menubar icon simple
   - Put detailed status in menu
