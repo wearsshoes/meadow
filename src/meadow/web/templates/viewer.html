@@ -2,29 +2,49 @@
 {% block content %}
 <div class="container">
     <h1>Research Log</h1>
-    <table id="log-table">
-        <tr>
-            <th>Screenshot</th>
-            <th>Time</th>
-            <th>App</th>
-            <th>Window</th>
-            <th>Action</th>
-            <th>Topic</th>
-            <th>Research Summary</th>
-            <th>OCR Text</th>
-        </tr>
+    <div class="header-actions">
+        <button onclick="window.location.href='open_log_file'" class="action-button">Open Log File</button>
+    </div>
+    <div class="entries">
         {% for entry in entries %}
-        <tr>
-            <td><img loading="lazy" src="data:image/png;base64,{{ entry.thumbnail }}" alt="Screenshot" class="thumbnail"></td>
-            <td>{{ entry.timestamp }}</td>
-            <td>{{ entry.app }}</td>
-            <td>{{ entry.window }}</td>
-            <td>{{ entry.description }}</td>
-            <td>{{ entry.research_topic if entry.research_topic else "none" }}</td>
-            <td>{{ entry.research_summary if entry.research_summary else "Not relevant" }}</td>
-            <td>{{ entry.ocr_text }}</td>
-        </tr>
+        <div class="entry">
+            <img loading="lazy" src="data:image/png;base64,{{ entry.thumbnail }}" alt="Screenshot" class="entry-image">
+            <div class="entry-content">
+                <div class="entry-metadata">
+                    <span class="timestamp">{{ entry.timestamp }}</span>
+                    <span class="app"> | {{ entry.app }}</span>
+                    <span class="continuation">
+                        {% if entry.continuation %}
+                            | {{ 'Continued action' if entry.continuation == 'true' else 'New action' }}
+                        {% endif %}
+                    </span>
+                </div>
+                <h3 class="window-title">{{ entry.window }}</h3>
+                <p class="action">{{ entry.description }}</p>
+                <div>
+                    <span class="topic-tag">{{ entry.research_topic }}</span>
+                </div>
+
+                <details class="details">
+                    <summary>Details</summary>
+                    <h4>Research Summary</h4>
+                    <p class="summary">{{ entry.research_summary }}</p>
+                    <h4>OCR Text</h4>
+                    <p class="ocr">{{ entry.ocr_text }}</p>
+                    <h4>File Path</h4>
+                    <p class="filepath">{{ entry.filepath }}</p>
+                    {% if entry.claude_prompt %}
+                    <h4>Analysis Prompt</h4>
+                    <p class="ocr">{{ entry.claude_prompt }}</p>
+                    {% endif %}
+                    {% if entry.claude_response %}
+                    <h4>Claude Response</h4>
+                    <p class="ocr">{{ entry.claude_response }}</p>
+                    {% endif %}
+                </details>
+            </div>
+        </div>
         {% endfor %}
-    </table>
+    </div>
 </div>
 {% endblock %}

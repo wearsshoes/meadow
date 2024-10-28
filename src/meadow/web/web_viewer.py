@@ -52,6 +52,14 @@ def get_thumbnail_base64(image_path):
 
 
 
+@app.route('/open_log_file')
+def open_log_file():
+    """Open the log file location in Finder"""
+    app_dir = os.path.expanduser('~/Library/Application Support/Meadow')
+    log_path = os.path.join(app_dir, 'data', 'logs')
+    os.system(f'open "{log_path}"')
+    return '', 204
+
 @app.route('/')
 def view_log():
     """
@@ -155,6 +163,7 @@ def shutdown_viewer():
 
 def start_viewer():
     """Start the Flask server"""
+    print("[DEBUG] Starting web viewer...")
     app.run(port=5050, debug=False, use_reloader=False)
 
 if __name__ == '__main__':
