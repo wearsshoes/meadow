@@ -13,7 +13,7 @@
         </tr>
         {% for entry in entries %}
         <tr>
-            <td><img src="data:image/png;base64,{{ entry.thumbnail }}" alt="Screenshot"></td>
+            <td><img loading="lazy" src="data:image/png;base64,{{ entry.thumbnail }}" alt="Screenshot"></td>
             <td>{{ entry.timestamp }}</td>
             <td>{{ entry.app }}</td>
             <td>{{ entry.window }}</td>
