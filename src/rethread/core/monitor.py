@@ -37,12 +37,12 @@ def take_screenshot(screenshot_dir):
     screenshot.save(filename)
     return screenshot, filename, timestamp, window_info
 
-def monitoring_loop(config, timer_menu_item, is_monitoring, data_dir):
+def monitoring_loop(config, timer_menu_item, is_monitoring_ref, data_dir):
     """Main monitoring loop"""
     next_screenshot = time.time() + config['interval']
     last_window_info = get_active_window_info()
 
-    while is_monitoring:
+    while is_monitoring_ref():
         current_window = get_active_window_info()
         remaining = max(0, round(next_screenshot - time.time()))
         timer_menu_item.title = f"Next capture: {remaining}s"

@@ -1,4 +1,4 @@
-
+# pylint: disable=import-error
 """Menubar app for screen monitoring using rumps and Quartz"""
 
 import os
@@ -46,7 +46,8 @@ class MenubarApp(rumps.App):
         default_config = {
             'screenshot_dir': os.path.join(self.data_dir, 'screenshots'),
             'notes_dir': os.path.join(os.path.expanduser('~/Documents'), 'ReThread Notes'),
-            'interval': 60
+            'interval': 60,
+            'research_topic': 'civic government'
         }
 
         # Load configuration from file
@@ -132,7 +133,7 @@ class MenubarApp(rumps.App):
 
     def monitoring_loop(self):
         """Main monitoring loop"""
-        monitoring_loop(self.config, self.timer_menu_item, self.is_monitoring, self.data_dir)
+        monitoring_loop(self.config, self.timer_menu_item, lambda: self.is_monitoring, self.data_dir)
 
     @rumps.clicked("Analyze Current Screen")
     def take_screenshot_and_analyze(self, _):

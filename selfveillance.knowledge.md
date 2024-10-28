@@ -5,13 +5,34 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Enable easy review of research progress and insights
 -
 ## Project Mission
-- Assist researchers by tracking and organizing their research activities
-- Generate structured outlines from screen activity and content
+- Assist researchers by tracking and analyzing topic-relevant content
+- Filter and analyze content based on configured research topics
+- Generate detailed summaries of relevant research material
 - Maintain research context across multiple sources and sessions
 - Compile coherent research summaries automatically
 - Keep all data private and local
 
 ## Core Design Principles
+- AI Response Format
+  - Use XML tags for structured responses
+  - Parse XML into JSON for storage
+  - Required tags:
+    ```xml
+    <action>Brief description of main user action</action>
+    <relevance>true/false for research topic relevance</relevance>
+    <summary>Research-relevant content summary</summary>
+    ```
+  - XML Parsing Safety:
+    - Escape special characters in content
+    - Use html.escape for user-facing output
+    - Handle CDATA sections if needed
+    - Validate tag presence before access
+    - Sanitize before regex matching
+  - Parse tags individually with regex
+  - Store all fields directly in log entries
+  - No tuple/list wrapping of parsed data
+  - Include error handling for malformed responses
+  - Empty summary tag indicates non-relevant content
 - Architecture
   - Prefer simple solutions over complex ones
   - Use multiprocessing for clean process separation
@@ -79,6 +100,27 @@ Note: When updating dependencies, check for async/await usage in the codebase as
   - Minimal Redundancy: No duplicate code between modules
   - Process over Threads: Use multiprocessing for isolation
 
+- State Management
+  - Monitor state transitions carefully
+  - Reset monitoring state when settings change
+  - Only start/stop monitoring through explicit user actions
+  - Threading Constraints
+    - Signal handlers must run in main thread
+    - Keep Flask cleanup in main process
+    - Use event flags for thread communication
+    - Avoid signals for inter-thread coordination
+  - Resource Management
+    - Clean up resources on shutdown
+    - Handle multiprocessing semaphores explicitly
+    - Use context managers for resource lifecycle
+    - Check for resource leaks during development
+  - Monitoring State
+    - Use boolean flag for monitoring state
+    - Check flag before starting new monitoring
+    - Reset timer and window info on stop
+    - Clear menu status on stop
+    - Ensure monitoring thread exits cleanly
+
 - Module Organization
   - menubar_app.py: UI and coordination only
     - No direct file or API operations 
@@ -122,6 +164,8 @@ Application data is stored in platform-specific user data directories:
       - screenshot_dir: Screenshot storage location
       - notes_dir: Research notes location (default: ~/Documents/ReThread Notes)
       - interval: Screenshot interval in seconds
+      - research_topic: Active research topic (default: 'civic government')
+      - topic_threshold: Minimum relevance score for content analysis
   - data/
     - screenshots/ - Screenshot images
     - logs/ - Analysis logs
@@ -146,6 +190,11 @@ Files:
 - Keep screenshot filepath consistent
 - Handle API timeouts gracefully
 - Show loading states during async operations
+- Content Analysis
+  - Check topic relevance before detailed analysis
+  - Provide specific, research-focused summaries
+  - Include key quotes and citations when available
+  - Note connections to previous research content
 - Take first screenshot when monitoring starts
 - Format datetime objects before JSON serialization
 - Config file handling

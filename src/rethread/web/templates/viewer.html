@@ -15,6 +15,7 @@
                 <th onclick="sortTable(2, 'text')">App</th>
                 <th>Window Title</th>
                 <th>Description</th>
+                <th>Research Summary</th>
             </tr>
         </thead>
         <tbody>
@@ -25,6 +26,7 @@
                 <td>{{ entry.app }}</td>
                 <td>{{ entry.window }}</td>
                 <td>{{ entry.description }}</td>
+<td>{{ entry.research_summary if entry.research_summary else "Not relevant" }}</td>
             </tr>
             {% endfor %}
         </tbody>
