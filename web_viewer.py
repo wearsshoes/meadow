@@ -112,9 +112,16 @@ def settings():
         template_content = f.read()
     return render_template_string(template_content, interval=config['interval'], config=config)
 
+def shutdown_viewer():
+    """Shutdown the Flask server and cleanup resources"""
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+    func()
+
 def start_viewer():
     """Start the Flask server"""
-    app.run(port=5050, debug=True, use_reloader=False)  # use_reloader=False because we're in a thread
+    app.run(port=5050, debug=False, use_reloader=False)
 
 if __name__ == '__main__':
     app.run(port=5050)
