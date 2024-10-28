@@ -4,6 +4,7 @@
 import io
 import os
 import threading
+import subprocess
 import time
 import json
 import base64
@@ -59,6 +60,7 @@ class MenubarApp(rumps.App):
             'interval': 60
         }
 
+        # Load configuration from file
         try:
             with open(self.config_path, 'r', encoding='utf-8') as f:
                 self.config = json.load(f)
@@ -67,6 +69,12 @@ class MenubarApp(rumps.App):
             self.save_config()
 
         os.makedirs(self.config['screenshot_dir'], exist_ok=True)
+
+        # Ensure the analysis log file exists
+        self.log_path = os.path.join(self.data_dir, 'logs', 'analysis_log.json')
+        if not os.path.exists(self.log_path):
+            with open(self.log_path, 'w', encoding='utf-8') as f:
+                json.dump([], f)
 
     def setup_menu(self):
         """Setup menu items"""
@@ -250,7 +258,7 @@ class MenubarApp(rumps.App):
     @rumps.clicked("Open Screenshots Folder")
     def open_screenshots(self, _):
         """Open the screenshots directory in Finder."""
-        os.system(f"open {self.config['screenshot_dir']}")
+        subprocess.run(['open', self.config['screenshot_dir']], check=True)
 
     @rumps.clicked("Open Web Viewer")
     def open_web_viewer(self, _):
