@@ -30,8 +30,12 @@ def get_active_window_info():
         raise PermissionError("Unable to access screen content. Please check screen recording permissions.") from e
     window_list = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID)
     for window in window_list:
+        # Skip system UI elements
+        app = window.get(kCGWindowOwnerName, '')
+        if app in ['Window Server', 'SystemUIServer']:
+            continue
+            
         if window.get(kCGWindowIsOnscreen) and window.get(kCGWindowLayer, 0) == 0:
-            app = window.get(kCGWindowOwnerName, 'Unknown App')
             title = window.get(kCGWindowName, 'No Title')
             return {'app': app, 'title': title}
     return {'app': 'Unknown App', 'title': 'No Title'}

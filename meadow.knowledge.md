@@ -11,6 +11,10 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Screenshot handling:
   - Only capture primary monitor to avoid PIL assertion errors
   - Skip automatic screenshots of Meadow's own interface
+  - Handle macOS window detection edge cases:
+    - "Window Server StatusIndicator" often appears instead of real app name
+    - Most common during manual captures
+    - May need additional window server queries or alternative detection methods
 - Data separation:
   - Store raw OCR results in logs separate from AI analysis
   - Keep original extracted text for reference
