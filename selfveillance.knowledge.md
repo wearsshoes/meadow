@@ -24,6 +24,11 @@ A macOS menubar app that periodically captures and analyzes your screen activity
 - pillow 11.0.0 - Image processing
 - anthropic 0.37.1 - Claude API client
 - pyobjc-framework-Quartz - Native macOS window management
+- asyncio 3.4.3 - Async/await support
+- Flask 3.0.3 - Web viewer server
+- ptyprocess 0.7.0 - Terminal interaction
+
+Note: When updating dependencies, check for async/await usage in the codebase as these require explicit asyncio support
 
 ## Architecture
 - Separate concerns into distinct modules
@@ -32,10 +37,21 @@ A macOS menubar app that periodically captures and analyzes your screen activity
 - Keep frontend assets in static files
 
 ## Data Structure
+
+Application data is stored in platform-specific user data directories:
+- macOS: ~/Library/Application Support/Selfveillance/
+  - config/
+    - config.json - User preferences
+  - data/
+    - screenshots/ - Screenshot images
+    - logs/ - Analysis logs
+  - cache/
+    - thumbnails/ - Web viewer thumbnail cache
+
+Files:
 - Screenshots saved with timestamps
-- Window information stored as app_name and window_title
+- Window information stored as app_name and window_title 
 - Analysis logs stored as JSON
-- Config in ~/.screen_monitor_config.json
 
 ## Claude Integration
 ```python
@@ -70,3 +86,19 @@ messages=[{
 - Show loading states during async operations
 - Take first screenshot when monitoring starts
 - Format datetime objects before JSON serialization
+
+## TypeScript to Python Translation
+- Replace Promise constructor with async/await pattern
+- Use Python's asyncio instead of JS Promise chains
+- Convert arrow functions to standard Python functions
+- Replace process.env with os.environ
+- Replace node-pty with ptyprocess
+- Handle string interpolation with f-strings
+- Use Python type hints instead of TypeScript types
+
+## Code Porting Guidelines
+- Maintain exact feature parity when porting between languages
+- Port all function parameters and return types
+- Preserve error handling behavior
+- Keep test functions for verification
+- Match original terminal interaction behavior

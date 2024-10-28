@@ -33,6 +33,5 @@ ENV/
 *.swo
 
 # Project specific
-~/.screen_monitor_config.json
-~/screen_monitor_screenshots/
+~/Library/Application Support/Selfveillance/
 ```

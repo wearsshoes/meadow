@@ -39,12 +39,12 @@ def view_log():
     Reads configuration and log files, processes log entries,
     and renders an HTML template with the log data.
     """
-
-    config_path = os.path.expanduser('~/.screen_monitor_config.json')
+    app_dir = os.path.expanduser('~/Library/Application Support/Selfveillance')
+    config_path = os.path.join(app_dir, 'config', 'config.json')
     with open(config_path, 'r', encoding='utf-8') as f:
         config = json.load(f)
 
-    log_path = os.path.join(config['screenshot_dir'], 'analysis_log.json')
+    log_path = os.path.join(app_dir, 'data', 'logs', 'analysis_log.json')
     with open(log_path, 'r', encoding='utf-8') as f:
         entries = json.load(f)
 

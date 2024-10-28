@@ -41,9 +41,21 @@ class ScreenMonitorApp(rumps.App):
 
     def setup_config(self):
         """Initialize configuration settings"""
-        self.config_path = os.path.expanduser('~/.screen_monitor_config.json')
+        # Set up application directories
+        self.app_dir = os.path.expanduser('~/Library/Application Support/Selfveillance')
+        self.config_dir = os.path.join(self.app_dir, 'config')
+        self.data_dir = os.path.join(self.app_dir, 'data')
+        self.cache_dir = os.path.join(self.app_dir, 'cache')
+        
+        # Create directory structure
+        os.makedirs(self.config_dir, exist_ok=True)
+        os.makedirs(os.path.join(self.data_dir, 'screenshots'), exist_ok=True)
+        os.makedirs(os.path.join(self.data_dir, 'logs'), exist_ok=True)
+        os.makedirs(os.path.join(self.cache_dir, 'thumbnails'), exist_ok=True)
+        
+        self.config_path = os.path.join(self.config_dir, 'config.json')
         default_config = {
-            'screenshot_dir': os.path.expanduser('~/screen_monitor_screenshots'),
+            'screenshot_dir': os.path.join(self.data_dir, 'screenshots'),
             'interval': 60
         }
 
@@ -100,8 +112,8 @@ class ScreenMonitorApp(rumps.App):
     def analyze_image(self, screenshot, filename, timestamp, window_info):
         """Analyze screenshot using Claude API"""
         try:
-            MAX_SIZE = (1344, 896)
-            screenshot.thumbnail(MAX_SIZE, Image.Resampling.LANCZOS)
+            max_size = (1344, 896)
+            screenshot.thumbnail(max_size, Image.Resampling.LANCZOS)
 
             buffered = io.BytesIO()
             screenshot.save(buffered, format="PNG")
@@ -149,7 +161,7 @@ class ScreenMonitorApp(rumps.App):
 
     def log_analysis(self, filename, description, timestamp, window_info):
         """Log analysis results to JSON file"""
-        log_path = os.path.join(self.config['screenshot_dir'], 'analysis_log.json')
+        log_path = os.path.join(self.data_dir, 'logs', 'analysis_log.json')
 
         entry = {
             'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
