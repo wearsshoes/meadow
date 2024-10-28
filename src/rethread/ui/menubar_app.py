@@ -7,8 +7,8 @@ import subprocess
 import json
 import webbrowser
 import rumps
-from rethread.core.monitor import monitoring_loop, take_screenshot
-from rethread.core.analyzer import analyze_image
+from core.monitor import monitoring_loop, take_screenshot
+from core.analyzer import analyze_image
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-locals

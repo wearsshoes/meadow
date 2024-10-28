@@ -61,6 +61,11 @@ Note: When updating dependencies, check for async/await usage in the codebase as
     - Flask server
     - Log display
     - Settings interface
+  - Python Package Structure
+    - Use __init__.py files to mark directories as Python packages
+    - Required for relative imports between modules
+    - Enables `from rethread.core import monitor` style imports
+    - Keep __init__.py files minimal unless exposing specific APIs
 
 - Module Principles
   - Group related functionality in same module
