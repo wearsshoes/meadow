@@ -1,6 +1,6 @@
 import multiprocessing
-from menubar_app import MenubarApp
-from web_viewer import start_viewer
+from rethread.ui.menubar_app import MenubarApp
+from rethread.web.web_viewer import start_viewer
 
 def main():
     # Start web viewer in a separate process

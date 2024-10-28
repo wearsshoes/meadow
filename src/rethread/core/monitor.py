@@ -15,7 +15,7 @@ from Quartz import (
     kCGWindowOwnerName,
     kCGWindowName
 )
-from analyzer import analyze_image
+from rethread.core.analyzer import analyze_image
 
 def get_active_window_info():
     """Get active window info using Quartz"""
