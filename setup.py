@@ -1,3 +1,4 @@
+# pylint: disable=import-error
 from setuptools import setup, find_packages
 
 APP = ['src/meadow/main.py']
@@ -7,10 +8,12 @@ DATA_FILES = [
                   'src/meadow/web/templates/settings.html']),
     ('static/css', ['src/meadow/web/static/css/styles.css']),
     ('static/js', ['src/meadow/web/static/js/settings.js',
-                   'src/meadow/web/static/js/sort.js'])
+                   'src/meadow/web/static/js/sort.js']),
+    ('resources', ['src/meadow/resources/icon.png'])
 ]
 OPTIONS = {
-    'argv_emulation': True,
+    'argv_emulation': False,
+    'iconfile': 'src/meadow/resources/icon.png',
     'plist': {
         'LSUIElement': True,  # Makes it a menubar app without dock icon
         'CFBundleName': 'Meadow',
