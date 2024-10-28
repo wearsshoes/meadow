@@ -13,6 +13,10 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Keep all data private and local
 
 ## Core Design Principles
+- Self-Monitoring Constraints
+  - Exclude ReThread's own UI from automatic monitoring
+  - Only capture ReThread windows when explicitly requested via menubar
+  - Prevent recursive/redundant analysis of monitoring interface
 - AI Response Format
   - Use XML tags for structured responses
   - Parse XML into JSON for storage
@@ -42,6 +46,10 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
   - Put detailed status in menu
   - Use native OS interfaces when available (e.g. file pickers over custom dialogs)
   - Follow platform UI conventions
+  - Maintain consistent navigation
+    - Show menubar in both native app and web interface
+    - Keep core actions accessible across all views
+    - Use same terminology and icons in both interfaces
   - Use native OS interfaces when available (e.g. file pickers over custom dialogs)
   - Follow platform UI conventions
 
@@ -104,6 +112,10 @@ Note: When updating dependencies, check for async/await usage in the codebase as
   - Monitor state transitions carefully
   - Reset monitoring state when settings change
   - Only start/stop monitoring through explicit user actions
+  - Settings changes take effect immediately:
+    - Config updates trigger behavior changes without restart
+    - Analysis parameters (e.g. research topic) update on next capture
+    - UI reflects current settings state
   - Threading Constraints
     - Signal handlers must run in main thread
     - Keep Flask cleanup in main process

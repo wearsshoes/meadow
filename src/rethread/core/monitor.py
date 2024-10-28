@@ -22,10 +22,12 @@ def get_active_window_info():
     window_list = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID)
     for window in window_list:
         if window.get(kCGWindowIsOnscreen) and window.get(kCGWindowLayer, 0) == 0:
-            return {
-                'app': window.get(kCGWindowOwnerName, 'Unknown App'),
-                'title': window.get(kCGWindowName, 'No Title')
-            }
+            app = window.get(kCGWindowOwnerName, 'Unknown App')
+            title = window.get(kCGWindowName, 'No Title')
+            # Skip ReThread's own windows
+            if (app == 'Python' or 'Chrome') and ('ReThread' in title or 'localhost:5050' in title):
+                continue
+            return {'app': app, 'title': title}
     return {'app': 'Unknown App', 'title': 'No Title'}
 
 def take_screenshot(screenshot_dir):

@@ -85,6 +85,11 @@ def settings():
                 new_interval = int(request.form['interval'])
                 if new_interval > 0:
                     config['interval'] = new_interval
+                    
+            if 'research_topic' in request.form:
+                new_topic = request.form['research_topic'].strip()
+                if new_topic:
+                    config['research_topic'] = new_topic
 
             if 'screenshot_dir' in request.form:
                 new_dir = request.form['screenshot_dir']
