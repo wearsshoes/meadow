@@ -95,7 +95,7 @@ async def execute_manicode(instructions: str, options: Dict[str, str], allow_not
 
 async def test():
     """Test function"""
-    project_root = os.path.join(os.getcwd(), "src/rethread/web/static")
+    project_root = os.path.join(os.getcwd(), "src/meadow/web/static")
     try:
         result = await execute_manicode(
             "add dark mode responsive to system settings", {"cwd": project_root}

@@ -11,7 +11,7 @@
         </div>
         <div class="setting-group">
             <label for="research_topics">Research Topics (one per line)</label>
-            <textarea name="research_topics" rows="3" onchange="saveSettings(this.form)">{{ '\n'.join(config.get('research_topics', [])) }}</textarea>
+            <textarea name="research_topics" rows="5" cols="60" onchange="saveSettings(this.form)">{{ '\n'.join(config.get('research_topics', [])) }}</textarea>
         </div>
         <div class="setting-group">
             <label for="screenshot_dir">Screenshots Directory</label>
@@ -20,6 +20,17 @@
         <div class="setting-group">
             <label for="notes_dir">Notes Directory</label>
             <input type="text" name="notes_dir" value="{{ config['notes_dir'] }}" onchange="saveSettings(this.form)">
+        </div>
+        <div class="setting-group">
+            <label for="anthropic_api_key">Anthropic API Key</label>
+            <input type="text" name="anthropic_api_key" value="{{ config.get('anthropic_api_key', '')}}" placeholder="No saved key in config. {% if environ_api_key %}But a key exists in the local environment.{% endif %}"
+            onchange="saveSettings(this.form)">
+            <p>Get your Claude API key from
+                <a href="https://console.anthropic.com">Anthropic</a>
+                and enter it above. <br/>You can also set it as an environment variable in bash:
+                <pre><code>export ANTHROPIC_API_KEY="your-api-key"</code></pre>
+            </p>
+
         </div>
     </form>
 </div>

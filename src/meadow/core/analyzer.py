@@ -5,6 +5,7 @@ import base64
 import io
 import re
 import json
+import os
 from PIL import Image
 from anthropic import Anthropic, AnthropicError
 from .manicode_wrapper import execute_manicode
@@ -19,7 +20,17 @@ def analyze_image(screenshot, filename, timestamp, window_info, log_path):
         screenshot.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode()
 
-        client = Anthropic()
+        # Use config API key if available, otherwise fall back to environment variable
+        api_key = None
+        config_path = os.path.join(os.path.expanduser('~/Library/Application Support/Meadow'), 'config', 'config.json')
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                api_key = config.get('anthropic_api_key')
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
+
+        client = Anthropic(api_key=api_key) if api_key else Anthropic()
 
         # Get previous action for context
         try:

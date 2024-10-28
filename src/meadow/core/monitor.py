@@ -49,8 +49,8 @@ def monitoring_loop(config, timer_menu_item, is_monitoring_ref, data_dir, set_ti
         set_title(f"👁️ {remaining}s" if is_monitoring_ref() else "📸")
         # Take screenshot on window change or interval
         if (current_window != last_window_info) or (time.time() >= next_screenshot):
-            # Skip if current window is ReThread
-            if 'ReThread' in current_window['title']:
+            # Skip if current window is Meadow
+            if 'Meadow' in current_window['title']:
                 time.sleep(1)
                 continue
             screenshot, filename, timestamp, window_info = take_screenshot(config['screenshot_dir'])

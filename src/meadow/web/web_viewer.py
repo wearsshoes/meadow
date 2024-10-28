@@ -8,6 +8,7 @@ import json
 import base64
 from PIL import Image
 from flask import Flask, redirect, render_template_string, request, url_for, jsonify
+from anthropic import Anthropic
 
 app = Flask(__name__)
 
@@ -20,7 +21,7 @@ def get_thumbnail_base64(image_path):
         return thumbnail_cache[image_path]
 
     # Check disk cache
-    cache_dir = os.path.expanduser('~/Library/Application Support/ReThread/cache/thumbnails')
+    cache_dir = os.path.expanduser('~/Library/Application Support/Meadow/cache/thumbnails')
     os.makedirs(cache_dir, exist_ok=True)
     cache_path = os.path.join(cache_dir, os.path.basename(image_path))
 
@@ -57,7 +58,7 @@ def view_log():
     Reads configuration and log files, processes log entries,
     and renders an HTML template with the log data.
     """
-    app_dir = os.path.expanduser('~/Library/Application Support/ReThread')
+    app_dir = os.path.expanduser('~/Library/Application Support/Meadow')
 
     log_path = os.path.join(app_dir, 'data', 'logs', 'analysis_log.json')
     with open(log_path, 'r', encoding='utf-8') as f:
@@ -80,7 +81,7 @@ def view_log():
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
     """Handle settings page and form submission"""
-    app_dir = os.path.expanduser('~/Library/Application Support/ReThread')
+    app_dir = os.path.expanduser('~/Library/Application Support/Meadow')
     config_path = os.path.join(app_dir, 'config', 'config.json')
 
     if request.method == 'POST':
@@ -130,10 +131,13 @@ def settings():
     with open(config_path, 'r', encoding='utf-8') as f:
         config = json.load(f)
 
+    # Get environment API key
+    environ_api_key = os.environ.get('ANTHROPIC_API_KEY', '')
+
     template_path = os.path.join(os.path.dirname(__file__), 'templates', 'settings.html')
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
-    return render_template_string(template_content, interval=config['interval'], config=config)
+    return render_template_string(template_content, interval=config['interval'], config=config, environ_api_key=environ_api_key)
 
 def shutdown_viewer():
     """Shutdown the Flask server and cleanup resources"""

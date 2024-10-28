@@ -48,7 +48,7 @@ class MenubarApp(rumps.App):
         self.config_path = os.path.join(self.config_dir, 'config.json')
         default_config = {
             'screenshot_dir': os.path.join(self.data_dir, 'screenshots'),
-            'notes_dir': os.path.join(os.path.expanduser('~/Documents'), 'ReThread Notes'),
+            'notes_dir': os.path.join(os.path.expanduser('~/Documents'), 'Meadow Notes'),
             'interval': 60,
             'research_topics': ['civic government']
         }
