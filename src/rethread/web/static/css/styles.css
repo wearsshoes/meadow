@@ -1,3 +1,23 @@
+.menubar {
+    background: var(--header-bg);
+    padding: 1rem;
+    margin-bottom: 2rem;
+}
+
+.nav-item {
+    color: var(--text-color);
+    text-decoration: none;
+    margin-right: 2rem;
+}
+
+.nav-item:hover {
+    color: var(--link-hover);
+}
+
+.container {
+    padding: 0 2rem;
+}
+
 :root {
     --bg-color: #ffffff;
     --text-color: #000000;

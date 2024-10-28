@@ -1,52 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>ReThread Settings</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
     <h1>ReThread Settings</h1>
     <p style="margin-bottom: 32px; color: #666;">Configure your research assistant preferences</p>
     <form method="POST">
         <div class="setting-group">
-            <label for="interval">Screenshot Interval (seconds):</label>
-            <input type="number" id="interval" name="interval" value="{{ interval }}" min="1" required>
+            <label for="interval">Screenshot Interval (seconds)</label>
+            <input type="number" name="interval" value="{{ interval }}" min="1">
         </div>
         <div class="setting-group">
-            <label for="screenshot_dir">Screenshots Folder:</label>
-            <input type="text" id="screenshot_dir" name="screenshot_dir" value="{{ config['screenshot_dir'] }}">
-            <button type="button" onclick="pickFolder('screenshot_dir')">Choose Folder</button>
+            <label for="research_topic">Research Topic</label>
+            <input type="text" name="research_topic" value="{{ config['research_topic'] }}">
         </div>
-        <div class="setting-group">
-            <label for="notes_dir">Notes Folder:</label>
-            <input type="text" id="notes_dir" name="notes_dir" value="{{ config['notes_dir'] }}">
-            <button type="button" onclick="pickFolder('notes_dir')">Choose Folder</button>
-        </div>
-        <button type="submit">Save</button>
+        <button type="submit">Save Settings</button>
     </form>
-    <script>
-        async function pickFolder(inputId) {
-            const response = await fetch('/pick_folder');
-            const data = await response.json();
-            if (data.path) {
-                document.getElementById(inputId).value = data.path;
-                await saveSettings();
-            }
-        }
-
-        async function saveSettings() {
-            const form = document.querySelector('form');
-            const formData = new FormData(form);
-            await fetch('/settings', {
-                method: 'POST',
-                body: formData
-            });
-        }
-
-        // Autosave on input changes
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('change', saveSettings);
-        });
-    </script>
-</body>
-</html>
+</div>
+{% endblock %}

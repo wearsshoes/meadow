@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ReThread</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <nav class="menubar">
+        <a href="/" class="nav-item">Research Log</a>
+        <a href="/settings" class="nav-item">Settings</a>
+    </nav>
+    {% block content %}{% endblock %}
+</body>
+</html>
