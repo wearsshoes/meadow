@@ -67,10 +67,8 @@ def analyze_image(screenshot, filename, timestamp, window_info, log_path):
                     },
                     {
                         "type": "text",
-                        "text": f"""Analyze this screenshot and its text content, and return your response in XML format with the following tags:
+                        "text": f"""Analyze this screenshot and return your response in XML format with the following tags:
 
-Extracted text from screen:
-{ocr_text}
                         <action>Brief description of main user action, starting with an active verb</action>
                         <topic>Which research topic this relates to, or "none" if not relevant: {', '.join(window_info.get('research_topics', ['civic government']))}</topic>
                         <relevance>true or false, whether content relates to any research topic</relevance>
@@ -99,7 +97,7 @@ Extracted text from screen:
         except (AttributeError, ValueError):
             action = "Error parsing response"
             summary = None
-        log_analysis(filename, action, timestamp, window_info, log_path, summary)
+        log_analysis(filename, action, topic, timestamp, window_info, log_path, summary, ocr_text)
 
     except (AnthropicError, IOError, ValueError) as e:
         print(f"Error in analyze_image: {str(e)}")
@@ -109,6 +107,14 @@ async def generate_research_notes(notes_dir: str, research_topics: list[str]):
     try:
         print("\n[DEBUG] Starting research note generation...")
         print(f"[DEBUG] Using notes directory: {notes_dir} and these research topics: {', '.join(research_topics)}")
+
+        # Get log from Application Support
+        log_path = os.path.join(os.path.expanduser('~/Library/Application Support/Meadow'), 'data', 'logs', 'analysis_log.json')
+
+        with open(log_path, 'r', encoding='utf-8') as f:
+            logs = json.load(f)
+
+        print(f"[DEBUG] Found {len(logs)} log entries")
 
         instructions = f"""
         1. Review the most recent usage logs for content related to these research topics: {', '.join(research_topics)}
@@ -126,15 +132,17 @@ async def generate_research_notes(notes_dir: str, research_topics: list[str]):
     except (IOError, json.JSONDecodeError) as e:
         print(f"Error generating notes: {e}")
 
-def log_analysis(filename, description, timestamp, window_info, log_path, summary=None):
+def log_analysis(filename, action, topic, timestamp, window_info, log_path, summary=None, ocr_text=None):
     """Log analysis results to JSON file"""
     entry = {
         'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
         'filepath': filename,
         'app': window_info['app'],
         'window': window_info['title'],
-        'description': description,
+        'description': action,
+        'research_topic': topic,
         'research_summary': summary,
+        'ocr_text': ocr_text,
     }
 
     try:

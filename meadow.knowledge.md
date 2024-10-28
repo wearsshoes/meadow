@@ -11,6 +11,14 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Screenshot handling:
   - Only capture primary monitor to avoid PIL assertion errors
   - Skip automatic screenshots of Meadow's own interface
+- Data separation:
+  - Store raw OCR results in logs separate from AI analysis
+  - Keep original extracted text for reference
+  - Send only relevant data to Claude API
+- Data separation:
+  - Store raw OCR results in logs separate from AI analysis
+  - Keep original extracted text for reference
+  - Send only relevant data to Claude API
 - Provide visibility into AI processing:
   - Log extracted text before analysis
   - Show intermediate steps in console
@@ -58,8 +66,20 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 Application data in ~/Library/Application Support/Meadow/:
 - config/config.json - User preferences
 - data/screenshots/ - Screenshot images
-- data/logs/ - Analysis logs
+- data/logs/ - Analysis logs (OCR results and research summaries)
 - cache/thumbnails/ - Web viewer thumbnail cache
+
+### Log Management
+- Store all logs in Application Support directory
+- Keep OCR results separate from AI analysis
+- Research note generation reads from Application Support logs
+- Initialize empty log files with valid JSON ([])
+
+### Log Management
+- Store all logs in Application Support directory
+- Keep OCR results separate from AI analysis
+- Research note generation reads from Application Support logs
+- Initialize empty log files with valid JSON ([])
 
 ### Initialization Patterns
 - Create all required directories on startup before any operations

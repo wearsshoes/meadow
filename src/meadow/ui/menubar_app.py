@@ -46,10 +46,10 @@ class MenubarApp(rumps.App):
         os.makedirs(self.log_dir, exist_ok=True)
         os.makedirs(os.path.join(self.cache_dir, 'thumbnails'), exist_ok=True)
 
-        # Ensure log file exists
-        log_path = os.path.join(self.log_dir, 'analysis_log.json')
-        if not os.path.exists(log_path):
-            with open(log_path, 'w', encoding='utf-8') as f:
+        # Ensure log file exists and initialize if needed
+        self.log_path = os.path.join(self.log_dir, 'analysis_log.json')
+        if not os.path.exists(self.log_path):
+            with open(self.log_path, 'w', encoding='utf-8') as f:
                 json.dump([], f)
 
         self.config_path = os.path.join(self.config_dir, 'config.json')
@@ -76,11 +76,7 @@ class MenubarApp(rumps.App):
         os.makedirs(self.config['screenshot_dir'], exist_ok=True)
         os.makedirs(self.config['notes_dir'], exist_ok=True)
 
-        # Ensure the analysis log file exists
-        self.log_path = os.path.join(self.config['notes_dir'], 'analysis_log.json')
-        if not os.path.exists(self.log_path):
-            with open(self.log_path, 'w', encoding='utf-8') as f:
-                json.dump([], f)
+        # Log path is already initialized in Application Support
 
     def setup_menu(self):
         """Setup menu items"""

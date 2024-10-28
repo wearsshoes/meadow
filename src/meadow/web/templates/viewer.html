@@ -9,7 +9,9 @@
             <th>App</th>
             <th>Window</th>
             <th>Action</th>
+            <th>Topic</th>
             <th>Research Summary</th>
+            <th>OCR Text</th>
         </tr>
         {% for entry in entries %}
         <tr>
@@ -18,7 +20,9 @@
             <td>{{ entry.app }}</td>
             <td>{{ entry.window }}</td>
             <td>{{ entry.description }}</td>
+            <td>{{ entry.research_topic if entry.research_topic else "none" }}</td>
             <td>{{ entry.research_summary if entry.research_summary else "Not relevant" }}</td>
+            <td>{{ entry.ocr_text }}</td>
         </tr>
         {% endfor %}
     </table>
