@@ -21,7 +21,7 @@ class MenubarApp(rumps.App):
     def __init__(self):
         self.timer_menu_item = None  # Initialize before super().__init__
         self.config = None  # Initialize config attribute
-        super().__init__("📸")
+        super().__init__("📸")  # Default icon when not monitoring
         self.setup_config()
         self.setup_menu()
         self.is_monitoring = False
@@ -74,12 +74,9 @@ class MenubarApp(rumps.App):
 
     def setup_menu(self):
         """Setup menu items"""
-        self.timer_menu_item = rumps.MenuItem("Next capture: --")
         self.menu = [
             "Start Monitoring",
             "Stop Monitoring",
-            None,
-            self.timer_menu_item,
             None,
             "Analyze Current Screen",
             None,
@@ -133,7 +130,8 @@ class MenubarApp(rumps.App):
 
     def monitoring_loop(self):
         """Main monitoring loop"""
-        monitoring_loop(self.config, self.timer_menu_item, lambda: self.is_monitoring, self.data_dir)
+        monitoring_loop(self.config, self.timer_menu_item, lambda: self.is_monitoring, self.data_dir,
+                       lambda title: setattr(self, 'title', title))
 
     @rumps.clicked("Analyze Current Screen")
     def take_screenshot_and_analyze(self, _):
@@ -153,14 +151,14 @@ class MenubarApp(rumps.App):
         """Start periodic screenshot monitoring."""
         if not self.is_monitoring:
             self.is_monitoring = True
+            self.title = "👁️"  # Active monitoring icon
             threading.Thread(target=self.monitoring_loop).start()
 
     @rumps.clicked("Stop Monitoring")
     def stop_monitoring(self, _):
         """Stop periodic screenshot monitoring."""
         self.is_monitoring = False
-        self.title = "📸"
-        self.timer_menu_item.title = "Next capture: --"
+        self.title = "📸"  # Default icon when not monitoring
 
     def show_settings(self):
         """Open settings in web viewer"""

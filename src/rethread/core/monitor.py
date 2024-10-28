@@ -1,4 +1,5 @@
 # pylint: disable=no-name-in-module
+# pylint: disable=import-error
 """Module for screen monitoring and screenshot capture"""
 
 import os
@@ -15,6 +16,7 @@ from Quartz import (
     kCGWindowOwnerName,
     kCGWindowName
 )
+
 from core.analyzer import analyze_image
 
 def get_active_window_info():
@@ -24,9 +26,6 @@ def get_active_window_info():
         if window.get(kCGWindowIsOnscreen) and window.get(kCGWindowLayer, 0) == 0:
             app = window.get(kCGWindowOwnerName, 'Unknown App')
             title = window.get(kCGWindowName, 'No Title')
-            # Skip ReThread's own windows
-            if (app == 'Python' or 'Chrome') and ('ReThread' in title or 'localhost:5050' in title):
-                continue
             return {'app': app, 'title': title}
     return {'app': 'Unknown App', 'title': 'No Title'}
 
@@ -39,7 +38,7 @@ def take_screenshot(screenshot_dir):
     screenshot.save(filename)
     return screenshot, filename, timestamp, window_info
 
-def monitoring_loop(config, timer_menu_item, is_monitoring_ref, data_dir):
+def monitoring_loop(config, timer_menu_item, is_monitoring_ref, data_dir, set_title):
     """Main monitoring loop"""
     next_screenshot = time.time() + config['interval']
     last_window_info = get_active_window_info()
@@ -47,10 +46,13 @@ def monitoring_loop(config, timer_menu_item, is_monitoring_ref, data_dir):
     while is_monitoring_ref():
         current_window = get_active_window_info()
         remaining = max(0, round(next_screenshot - time.time()))
-        timer_menu_item.title = f"Next capture: {remaining}s"
-
+        set_title(f"👁️ {remaining}s" if is_monitoring_ref() else "📸")
         # Take screenshot on window change or interval
         if (current_window != last_window_info) or (time.time() >= next_screenshot):
+            # Skip if current window is ReThread
+            if 'ReThread' in current_window['title']:
+                time.sleep(1)
+                continue
             screenshot, filename, timestamp, window_info = take_screenshot(config['screenshot_dir'])
             log_path = os.path.join(data_dir, 'logs', 'analysis_log.json')
             threading.Thread(target=analyze_image, args=(screenshot, filename, timestamp, window_info, log_path)).start()
