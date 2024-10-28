@@ -6,3 +6,4 @@ rumps==0.4.0
 ptyprocess==0.7.0
 watchdog==5.0.3
 psutil==6.1.0
+keyring==25.5.0

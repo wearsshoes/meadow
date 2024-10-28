@@ -21,6 +21,13 @@ from core.analyzer import analyze_image
 
 def get_active_window_info():
     """Get active window info using Quartz"""
+    # Check screen recording permissions
+    try:
+        window_list = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID)
+        if window_list is None:
+            raise PermissionError("Screen recording permission is required. Please enable it in System Preferences > Security & Privacy > Privacy > Screen Recording")
+    except Exception as e:
+        raise PermissionError("Unable to access screen content. Please check screen recording permissions.") from e
     window_list = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID)
     for window in window_list:
         if window.get(kCGWindowIsOnscreen) and window.get(kCGWindowLayer, 0) == 0:

@@ -38,12 +38,19 @@ class MenubarApp(rumps.App):
         self.config_dir = os.path.join(self.app_dir, 'config')
         self.data_dir = os.path.join(self.app_dir, 'data')
         self.cache_dir = os.path.join(self.app_dir, 'cache')
+        self.log_dir = os.path.join(self.data_dir, 'logs')
 
         # Create directory structure
         os.makedirs(self.config_dir, exist_ok=True)
         os.makedirs(os.path.join(self.data_dir, 'screenshots'), exist_ok=True)
-        os.makedirs(os.path.join(self.data_dir, 'logs'), exist_ok=True)
+        os.makedirs(self.log_dir, exist_ok=True)
         os.makedirs(os.path.join(self.cache_dir, 'thumbnails'), exist_ok=True)
+
+        # Ensure log file exists
+        log_path = os.path.join(self.log_dir, 'analysis_log.json')
+        if not os.path.exists(log_path):
+            with open(log_path, 'w', encoding='utf-8') as f:
+                json.dump([], f)
 
         self.config_path = os.path.join(self.config_dir, 'config.json')
         default_config = {
