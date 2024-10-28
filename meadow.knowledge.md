@@ -11,6 +11,10 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Screenshot handling:
   - Only capture primary monitor to avoid PIL assertion errors
   - Skip automatic screenshots of Meadow's own interface
+- Provide visibility into AI processing:
+  - Log extracted text before analysis
+  - Show intermediate steps in console
+  - Make AI "thinking" visible to user
 - Co-locate related data
   - Keep research logs with research notes
   - Separate application data from user content
@@ -19,6 +23,10 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Use multiprocessing for clean process separation
 - Use modern ML-based approaches where beneficial
   - EasyOCR for text extraction (chosen over Tesseract for accuracy)
+    - Requires input as file path, bytes, or numpy array (not PIL Image)
+    - Convert PIL Images using np.array(image) before passing to readtext()
+    - Requires input as file path, bytes, or numpy array (not PIL Image)
+    - Convert PIL Images using np.array(image) before passing to readtext()
   - Claude API for content analysis
 - Use modern ML-based approaches where beneficial
   - EasyOCR for text extraction (chosen over Tesseract for accuracy)

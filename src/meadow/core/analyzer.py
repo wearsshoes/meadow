@@ -6,12 +6,22 @@ import io
 import re
 import json
 import os
+import numpy as np
 from PIL import Image
+import easyocr
 from anthropic import Anthropic, AnthropicError
 from .manicode_wrapper import execute_manicode
 
 def analyze_image(screenshot, filename, timestamp, window_info, log_path):
-    """Analyze screenshot using Claude API and log the results"""
+    """Analyze screenshot using OCR and Claude API, then log the results"""
+    # Initialize OCR reader once
+    reader = easyocr.Reader(['en'])
+
+    # Extract text from image
+    img_array = np.array(screenshot)
+    ocr_text = reader.readtext(img_array, detail=0)
+    ocr_text = ' '.join(ocr_text)
+    print("OCR extracted text:", ocr_text)
     try:
         max_size = (1344, 896)
         screenshot.thumbnail(max_size, Image.Resampling.LANCZOS)
@@ -57,7 +67,10 @@ def analyze_image(screenshot, filename, timestamp, window_info, log_path):
                     },
                     {
                         "type": "text",
-                        "text": f"""Analyze this screenshot and return your response in XML format with the following tags:
+                        "text": f"""Analyze this screenshot and its text content, and return your response in XML format with the following tags:
+
+Extracted text from screen:
+{ocr_text}
                         <action>Brief description of main user action, starting with an active verb</action>
                         <topic>Which research topic this relates to, or "none" if not relevant: {', '.join(window_info.get('research_topics', ['civic government']))}</topic>
                         <relevance>true or false, whether content relates to any research topic</relevance>

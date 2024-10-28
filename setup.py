@@ -32,6 +32,7 @@ setup(
     packages=find_packages('src'),
     package_dir={'': 'src'},
     install_requires=[
+        'numpy>=1.26.0',
         'anthropic>=0.37.1',
         'Flask>=3.0.3',
         'Pillow>=11.0.0',
