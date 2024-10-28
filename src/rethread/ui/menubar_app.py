@@ -6,9 +6,10 @@ import threading
 import subprocess
 import json
 import webbrowser
+import asyncio
 import rumps
+from core.analyzer import generate_research_notes, analyze_image
 from core.monitor import monitoring_loop, take_screenshot
-from core.analyzer import analyze_image
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-locals
@@ -27,6 +28,8 @@ class MenubarApp(rumps.App):
         self.is_monitoring = False
         self.next_screenshot = None
         self.last_window_info = None
+        # Check config changes every 5 seconds
+        rumps.Timer(self.check_config_changes, 5).start()
 
     def setup_config(self):
         """Initialize configuration settings"""
@@ -47,7 +50,7 @@ class MenubarApp(rumps.App):
             'screenshot_dir': os.path.join(self.data_dir, 'screenshots'),
             'notes_dir': os.path.join(os.path.expanduser('~/Documents'), 'ReThread Notes'),
             'interval': 60,
-            'research_topic': 'civic government'
+            'research_topics': ['civic government']
         }
 
         # Load configuration from file
@@ -67,7 +70,7 @@ class MenubarApp(rumps.App):
         os.makedirs(self.config['notes_dir'], exist_ok=True)
 
         # Ensure the analysis log file exists
-        self.log_path = os.path.join(self.data_dir, 'logs', 'analysis_log.json')
+        self.log_path = os.path.join(self.config['notes_dir'], 'analysis_log.json')
         if not os.path.exists(self.log_path):
             with open(self.log_path, 'w', encoding='utf-8') as f:
                 json.dump([], f)
@@ -83,6 +86,7 @@ class MenubarApp(rumps.App):
             "Open Screenshots Folder",
             "Open Notes Folder",
             "Open Web Viewer",
+            "Generate Research Notes",
             "Settings",
             None,
         ]
@@ -184,3 +188,16 @@ class MenubarApp(rumps.App):
     def open_web_viewer(self, _):
         """Open the web viewer in default browser."""
         webbrowser.open('http://localhost:5050')
+
+    @rumps.clicked("Generate Research Notes")
+    def generate_notes(self, _):
+        """Generate Obsidian-style research notes from logs."""
+        self.title = "📝"
+        log_path = os.path.join(self.data_dir, 'logs', 'analysis_log.json')
+
+        async def generate():
+            await generate_research_notes(self.config['notes_dir'], self.config.get('research_topics', ['civic government']))
+            self.title = "📸"
+            subprocess.run(['open', self.config['notes_dir']], check=True)
+
+        threading.Thread(target=lambda: asyncio.run(generate())).start()

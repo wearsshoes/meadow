@@ -4,10 +4,25 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 ## Project Mission
 - Assist researchers by tracking and analyzing topic-relevant content
 - Filter and analyze content based on configured research topics
+  - Support multiple concurrent research topics
+  - Track which topic(s) each log entry relates to
+  - Allow flexible topic organization and tagging
 - Generate detailed summaries of relevant research material
 - Keep all data private and local
 
 ## Core Design Principles
+- Co-locate related data
+  - Keep research logs with research notes
+  - Separate application data from user content
+  - Let tools find data in standard locations
+- Co-locate related data
+  - Keep research logs with research notes
+  - Separate application data from user content
+  - Let tools find data in standard locations
+- Co-locate related data
+  - Keep research logs with research notes
+  - Separate application data from user content
+  - Let tools find data in standard locations
 - Skip automatic screenshots of ReThread's own interface
   - Check active window before taking screenshot
 
@@ -16,6 +31,48 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
   - Use browser-native UI components over OS-native when in web context
   - Keep menubar icon simple but informative (📸 idle, 👁️ monitoring)
   - Show status in icon title, not menu
+  - Provide console output for background operations
+    - Log progress during note generation
+    - Show errors and completion status
+    - Help debug AI interactions
+    - Print key execution points:
+      - Directory and environment info at start
+      - Process state changes and progress
+      - Working directory and environment context
+      - Error details with context
+      - Process termination status
+    - Maintain visibility throughout entire process execution
+      - Log before and after subprocess calls
+      - Show ongoing progress for long-running operations
+      - Confirm completion of major steps
+  - Provide console output for background operations
+    - Log progress during note generation
+    - Show errors and completion status
+    - Help debug AI interactions
+    - Print key execution points:
+      - Directory and environment info at start
+      - Process state changes and progress
+      - Working directory and environment context
+      - Error details with context
+      - Process termination status
+    - Maintain visibility throughout entire process execution
+      - Log before and after subprocess calls
+      - Show ongoing progress for long-running operations
+      - Confirm completion of major steps
+  - Provide console output for background operations
+    - Log progress during note generation
+    - Show errors and completion status
+    - Help debug AI interactions
+    - Print key execution points:
+      - Directory and environment info at start
+      - Process state changes and progress
+      - Working directory and environment context
+      - Error details with context
+      - Process termination status
+    - Maintain visibility throughout entire process execution
+      - Log before and after subprocess calls
+      - Show ongoing progress for long-running operations
+      - Confirm completion of major steps
 
 - Prefer simple solutions over complex ones
 - Use multiprocessing for clean process separation
@@ -26,14 +83,59 @@ Application data stored in ~/Library/Application Support/ReThread/:
 - cache/thumbnails/ - Web viewer thumbnail cache
 User content stored in configurable locations:
 - All paths configurable through settings
+- Research topics configurable through settings
+  - Multiple topics supported
+  - Each log entry tagged with relevant topics
+  - Topics used for filtering and organization
+  - Changes take effect immediately without restart
+  - Config changes propagate to all components
  - Validate loaded config has all required keys
 - Use XML tags for structured AI responses
 - Keep UI minimal and intuitive
 - menubar_app.py: UI and coordination
+- Use manicode wrapper for:
+  - Research log analysis
+  - Note synthesis and organization
+  - Maintaining knowledge graph connections
+  - Shell environment handling:
+    - Use explicit bash shell to avoid zsh defaults
+    - Escape quotes and newlines in commands
+    - Handle command length limits
+    - Verify shell environment before execution
+- Use manicode wrapper for:
+  - Research log analysis
+  - Note synthesis and organization
+  - Maintaining knowledge graph connections
+  - Shell environment handling:
+    - Use explicit bash shell to avoid zsh defaults
+    - Escape quotes and newlines in commands
+    - Handle command length limits
+    - Verify shell environment before execution
 
 ## Data Storage
-- Screenshots and logs stored in ~/Library/Application Support/ReThread/
-- Research notes default to ~/Documents/ReThread Notes
+- Application data stored in ~/Library/Application Support/ReThread/:
+  - config/config.json - User preferences
+  - data/screenshots/ - Screenshot images
+  - data/logs/ - Analysis logs
+  - cache/thumbnails/ - Web viewer thumbnail cache
+- User content stored in configurable locations:
+  - All paths configurable through settings
+  - Research notes and analysis logs stored together
+  - Notes follow Obsidian-style markdown format
+  - Use bidirectional links between related concepts
+  - Manicode synthesizes logs into interconnected notes
+  - Focus on recent, relevant content
+    - Process only most recent 20 relevant entries
+    - Skip irrelevant content to reduce noise
+  - Notes auto-update as new research is captured
+  - Research notes and analysis logs stored together
+  - Notes follow Obsidian-style markdown format
+  - Use bidirectional links between related concepts
+  - Manicode synthesizes logs into interconnected notes
+  - Focus on recent, relevant content
+    - Process only most recent 20 relevant entries
+    - Skip irrelevant content to reduce noise
+  - Notes auto-update as new research is captured
 - All paths configurable through settings
 
 ## Requirements

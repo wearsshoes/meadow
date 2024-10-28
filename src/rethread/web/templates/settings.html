@@ -10,8 +10,8 @@
             <input type="number" name="interval" value="{{ interval }}" min="1" onchange="saveSettings(this.form)">
         </div>
         <div class="setting-group">
-            <label for="research_topic">Research Topic</label>
-            <input type="text" name="research_topic" value="{{ config['research_topic'] }}" onchange="saveSettings(this.form)">
+            <label for="research_topics">Research Topics (one per line)</label>
+            <textarea name="research_topics" rows="3" onchange="saveSettings(this.form)">{{ '\n'.join(config.get('research_topics', [])) }}</textarea>
         </div>
         <div class="setting-group">
             <label for="screenshot_dir">Screenshots Directory</label>
