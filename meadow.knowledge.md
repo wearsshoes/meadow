@@ -8,6 +8,11 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Keep all data private and local
 
 ## Core Design Principles
+- Research topic handling:
+  - Source research topics from user config, not window context
+  - Use configured topics to guide Claude analysis
+  - Allow users to update topics without code changes
+
 - Screenshot handling:
   - Only capture primary monitor to avoid PIL assertion errors
   - Skip automatic screenshots of Meadow's own interface
@@ -42,6 +47,10 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
   - Claude API for content analysis
 - Use modern ML-based approaches where beneficial
   - EasyOCR for text extraction (chosen over Tesseract for accuracy)
+    - Requires input as file path, bytes, or numpy array (not PIL Image)
+    - Convert PIL Images using np.array(image) before passing to readtext()
+    - Requires input as file path, bytes, or numpy array (not PIL Image)
+    - Convert PIL Images using np.array(image) before passing to readtext()
   - Claude API for content analysis
 
 ## UI Patterns
@@ -49,9 +58,31 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Use browser-native UI components in web context
 - Keep menubar icon simple but informative (📸 idle, 👁️ monitoring)
 - Show status in icon title, not menu
+
+### Web Viewer Patterns
+- Use full-width entries instead of tables for log entries
+  - Compact left-aligned thumbnails
+  - Collapsible details for additional content
+  - Clear visual hierarchy: timestamp > title > action > details
+- Keep consistent padding and spacing
+- Use system color scheme for dark/light modes
+- Show all fields consistently
+  - Avoid conditional field display
+  - Use empty states rather than hiding fields
+  - Maintain predictable layout across entries
+
+### Web Viewer Patterns
+- Use full-width entries instead of tables for log entries
+  - Compact left-aligned thumbnails
+  - Collapsible details for additional content
+  - Clear visual hierarchy: timestamp > title > action > details
+- Keep consistent padding and spacing
+- Use system color scheme for dark/light modes
 - Provide console output for background operations
   - Log progress during note generation
   - Show errors and completion status
+  - Print key execution points
+  - Maintain visibility throughout execution
   - Print key execution points
   - Maintain visibility throughout execution
 
@@ -70,8 +101,26 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 Application data in ~/Library/Application Support/Meadow/:
 - config/config.json - User preferences
 - data/screenshots/ - Screenshot images
-- data/logs/ - Analysis logs (OCR results and research summaries)
+- data/logs/ - Analysis logs (includes prompts and responses for debugging)
 - cache/thumbnails/ - Web viewer thumbnail cache
+
+### Logging Patterns
+- Store complete context with each log entry
+  - Include raw inputs (screenshots, window info)
+  - Include intermediate steps (OCR text, prompts)
+  - Include final outputs (analysis, summaries)
+- Use structured objects/dicts for complex parameters
+- Keep logs human-readable for debugging
+- Co-locate related data in single log entry
+
+### Logging Patterns
+- Store complete context with each log entry
+  - Include raw inputs (screenshots, window info)
+  - Include intermediate steps (OCR text, prompts)
+  - Include final outputs (analysis, summaries)
+- Use structured objects/dicts for complex parameters
+- Keep logs human-readable for debugging
+- Co-locate related data in single log entry
 
 ### Log Management
 - Store all logs in Application Support directory

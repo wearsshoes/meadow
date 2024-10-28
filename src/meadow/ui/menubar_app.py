@@ -8,7 +8,7 @@ import json
 import webbrowser
 import asyncio
 import rumps
-from core.analyzer import generate_research_notes, analyze_image
+from core.analyzer import generate_research_notes, analyze_and_log_screenshot
 from core.monitor import monitoring_loop, take_screenshot
 
 # pylint: disable=too-many-instance-attributes
@@ -20,6 +20,7 @@ class MenubarApp(rumps.App):
     """
 
     def __init__(self):
+        print("[DEBUG] Initializing MenubarApp...")
         self.timer_menu_item = None  # Initialize before super().__init__
         self.config = None  # Initialize config attribute
         super().__init__("📸")  # Default icon when not monitoring
@@ -33,6 +34,7 @@ class MenubarApp(rumps.App):
 
     def setup_config(self):
         """Initialize configuration settings"""
+        print("[DEBUG] Setting up configuration...")
         # Set up application directories
         self.app_dir = os.path.expanduser('~/Library/Application Support/Meadow')
         self.config_dir = os.path.join(self.app_dir, 'config')
@@ -148,7 +150,7 @@ class MenubarApp(rumps.App):
         log_path = os.path.join(self.data_dir, 'logs', 'analysis_log.json')
 
         def analyze_and_restore():
-            analyze_image(screenshot, filename, timestamp, window_info, log_path)
+            analyze_and_log_screenshot(screenshot, filename, timestamp, window_info, log_path)
             self.title = "📸"
 
         threading.Thread(target=analyze_and_restore).start()

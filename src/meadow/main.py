@@ -3,6 +3,7 @@ from ui.menubar_app import MenubarApp
 from web.web_viewer import start_viewer
 
 def main():
+    print("\n[DEBUG] Starting Meadow...")
     # Start web viewer in a separate process
     viewer_process = multiprocessing.Process(target=start_viewer)
     viewer_process.start()

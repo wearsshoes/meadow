@@ -17,7 +17,7 @@ from Quartz import (
     kCGWindowName
 )
 
-from core.analyzer import analyze_image
+from core.analyzer import analyze_and_log_screenshot
 
 def get_active_window_info():
     """Get active window info using Quartz"""
@@ -34,7 +34,7 @@ def get_active_window_info():
         app = window.get(kCGWindowOwnerName, '')
         if app in ['Window Server', 'SystemUIServer']:
             continue
-            
+
         if window.get(kCGWindowIsOnscreen) and window.get(kCGWindowLayer, 0) == 0:
             title = window.get(kCGWindowName, 'No Title')
             return {'app': app, 'title': title}
@@ -67,7 +67,7 @@ def monitoring_loop(config, timer_menu_item, is_monitoring_ref, data_dir, set_ti
                 continue
             screenshot, filename, timestamp, window_info = take_screenshot(config['screenshot_dir'])
             log_path = os.path.join(data_dir, 'logs', 'analysis_log.json')
-            threading.Thread(target=analyze_image, args=(screenshot, filename, timestamp, window_info, log_path)).start()
+            threading.Thread(target=analyze_and_log_screenshot, args=(screenshot, filename, timestamp, window_info, log_path)).start()
             next_screenshot = time.time() + config['interval']
             last_window_info = current_window
 
