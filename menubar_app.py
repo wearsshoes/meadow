@@ -57,6 +57,7 @@ class MenubarApp(rumps.App):
         self.config_path = os.path.join(self.config_dir, 'config.json')
         default_config = {
             'screenshot_dir': os.path.join(self.data_dir, 'screenshots'),
+            'notes_dir': os.path.join(os.path.expanduser('~/Documents'), 'ReThread Notes'),
             'interval': 60
         }
 
@@ -64,11 +65,17 @@ class MenubarApp(rumps.App):
         try:
             with open(self.config_path, 'r', encoding='utf-8') as f:
                 self.config = json.load(f)
+                # Ensure all default keys exist
+                for key, value in default_config.items():
+                    if key not in self.config:
+                        self.config[key] = value
+                self.save_config()
         except FileNotFoundError:
             self.config = default_config
             self.save_config()
 
         os.makedirs(self.config['screenshot_dir'], exist_ok=True)
+        os.makedirs(self.config['notes_dir'], exist_ok=True)
 
         # Ensure the analysis log file exists
         self.log_path = os.path.join(self.data_dir, 'logs', 'analysis_log.json')
@@ -89,6 +96,8 @@ class MenubarApp(rumps.App):
             None,
             "Set Interval",
             "Open Screenshots Folder",
+            "Set Screenshots Folder",
+            "Set Notes Folder",
             "Open Web Viewer",
         ]
 
@@ -259,6 +268,32 @@ class MenubarApp(rumps.App):
     def open_screenshots(self, _):
         """Open the screenshots directory in Finder."""
         subprocess.run(['open', self.config['screenshot_dir']], check=True)
+
+    @rumps.clicked("Set Screenshots Folder")
+    def set_screenshots_folder(self, _):
+        """Display Finder dialog to set screenshots directory."""
+        cmd = '''osascript -e 'choose folder with prompt "Select Screenshots Folder"' '''
+        result = os.popen(cmd).read().strip()
+
+        if result:
+            # Remove 'alias ' prefix and ':' suffix that Apple script adds
+            new_path = result.replace('alias ', '').rstrip(':')
+            self.config['screenshot_dir'] = new_path
+            os.makedirs(new_path, exist_ok=True)
+            self.save_config()
+
+    @rumps.clicked("Set Notes Folder")
+    def set_notes_folder(self, _):
+        """Display Finder dialog to set notes directory."""
+        cmd = '''osascript -e 'choose folder with prompt "Select Notes Folder"' '''
+        result = os.popen(cmd).read().strip()
+
+        if result:
+            # Remove 'alias ' prefix and ':' suffix that Apple script adds
+            new_path = result.replace('alias ', '').rstrip(':')
+            self.config['notes_dir'] = new_path
+            os.makedirs(new_path, exist_ok=True)
+            self.save_config()
 
     @rumps.clicked("Open Web Viewer")
     def open_web_viewer(self, _):

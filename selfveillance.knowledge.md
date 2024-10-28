@@ -22,6 +22,10 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Clean UI
   - Keep menubar icon simple
   - Put detailed status in menu
+  - Use native OS interfaces when available (e.g. file pickers over custom dialogs)
+  - Follow platform UI conventions
+  - Use native OS interfaces when available (e.g. file pickers over custom dialogs)
+  - Follow platform UI conventions
 
 ## Core Dependencies
 - rumps 0.4.0 - macOS menubar app framework
@@ -47,11 +51,18 @@ Application data is stored in platform-specific user data directories:
 - macOS: ~/Library/Application Support/ReThread/
   - config/
     - config.json - User preferences
+      - screenshot_dir: Screenshot storage location
+      - notes_dir: Research notes location (default: ~/Documents/ReThread Notes)
+      - interval: Screenshot interval in seconds
   - data/
     - screenshots/ - Screenshot images
     - logs/ - Analysis logs
   - cache/
     - thumbnails/ - Web viewer thumbnail cache
+
+User content is stored in configurable locations:
+- Research notes default to ~/Documents/ReThread Notes
+- All paths configurable through config.json
 
 Files:
 - Screenshots saved with timestamps
@@ -91,3 +102,8 @@ messages=[{
 - Show loading states during async operations
 - Take first screenshot when monitoring starts
 - Format datetime objects before JSON serialization
+- Config file handling
+  - Validate loaded config has all required keys
+  - Use default_config as template for required keys
+  - Create missing directories from config paths
+  - Save config after any changes
