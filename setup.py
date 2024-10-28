@@ -14,6 +14,7 @@ DATA_FILES = [
 OPTIONS = {
     'argv_emulation': False,
     'iconfile': 'src/meadow/resources/icon.png',
+    'packages': ['rumps', 'PIL', 'anthropic', 'flask'],
     'plist': {
         'LSUIElement': True,  # Makes it a menubar app without dock icon
         'CFBundleName': 'Meadow',
@@ -23,7 +24,6 @@ OPTIONS = {
         'CFBundleShortVersionString': '0.1.0',
         'NSRequiresAquaSystemAppearance': False,  # Enable dark mode support
     },
-    'packages': ['rumps', 'PIL', 'anthropic', 'flask'],
 }
 
 setup(

@@ -7,52 +7,22 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Generate detailed summaries of relevant research material
 - Keep all data private and local
 
-## macOS App Structure
-- App icon requirements:
-  - Primary icon: 1024x1024 for App Store
-  - Standard sizes: 16,32,64,128,256,512,1024
-  - Format: ICNS file or PNG set
-  - Location: Resources/Assets.xcassets or Contents/Resources
-  - Name convention: AppIcon.icns or icon.png
-- Bundle structure follows Apple guidelines:
-  - Contents/MacOS/ - Executable
-  - Contents/Resources/ - Assets
-  - Contents/Frameworks/ - Dependencies
-  - Info.plist - Metadata
-
-## macOS App Structure
-- App icon requirements:
-  - Primary icon: 1024x1024 for App Store
-  - Standard sizes: 16,32,64,128,256,512,1024
-  - Format: ICNS file or PNG set
-  - Location: Resources/Assets.xcassets or Contents/Resources
-  - Name convention: AppIcon.icns or icon.png
-- Bundle structure follows Apple guidelines:
-  - Contents/MacOS/ - Executable
-  - Contents/Resources/ - Assets
-  - Contents/Frameworks/ - Dependencies
-  - Info.plist - Metadata
-
-## macOS App Structure
-- App icon requirements:
-  - Primary icon: 1024x1024 for App Store
-  - Standard sizes: 16,32,64,128,256,512,1024
-  - Format: ICNS file or PNG set
-  - Location: Resources/Assets.xcassets or Contents/Resources
-  - Name convention: AppIcon.icns or icon.png
-- Bundle structure follows Apple guidelines:
-  - Contents/MacOS/ - Executable
-  - Contents/Resources/ - Assets
-  - Contents/Frameworks/ - Dependencies
-  - Info.plist - Metadata
-
 ## Core Design Principles
+- Screenshot handling:
+  - Only capture primary monitor to avoid PIL assertion errors
+  - Skip automatic screenshots of Meadow's own interface
 - Co-locate related data
   - Keep research logs with research notes
   - Separate application data from user content
 - Skip automatic screenshots of Meadow's own interface
 - Prefer simple solutions over complex ones
 - Use multiprocessing for clean process separation
+- Use modern ML-based approaches where beneficial
+  - EasyOCR for text extraction (chosen over Tesseract for accuracy)
+  - Claude API for content analysis
+- Use modern ML-based approaches where beneficial
+  - EasyOCR for text extraction (chosen over Tesseract for accuracy)
+  - Claude API for content analysis
 
 ## UI Patterns
 - Auto-save changes immediately with visual feedback
@@ -112,6 +82,11 @@ User content in configurable locations:
 - pyobjc-framework-Quartz - Native macOS window management
 - Flask - Web viewer server
 - py2app - macOS app bundling
+
+### Dependency Management
+- Use setup.py as single source of truth for dependencies
+- Generate requirements.txt only when needed: `pip install . && pip freeze > requirements.txt`
+- Keep setup.py install_requires minimal - only direct dependencies
   - Requires Carbon.framework
   - Must include all required frameworks in OPTIONS
   - Common issues:
