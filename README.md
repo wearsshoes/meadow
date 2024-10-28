@@ -1,12 +1,10 @@
 # Meadow
-A macOS menubar app that acts as an AI research assistant by analyzing your screen activity using Claude API.
+The persistent research assistant for MacOS.
 
 ## Features
-- Automatic screenshot analysis and research note generation
-- Topic-based content filtering and organization
-- Web interface for browsing research logs
-- Configurable monitoring intervals and directories
-- Local data storage and privacy
+- Continuously and proactively improves your Markdown research notes.
+- Revisit all your research sessions with detailed summaries
+- Built on Claude, OpenRecall, and Manicode
 
 ## Setup
 1. Install dependencies:
