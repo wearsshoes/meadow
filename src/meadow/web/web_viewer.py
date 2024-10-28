@@ -6,9 +6,9 @@ import io
 import os
 import json
 import base64
+import keyring
 from PIL import Image
-from flask import Flask, redirect, render_template_string, request, url_for, jsonify
-from anthropic import Anthropic
+from flask import Flask, render_template_string, request
 
 app = Flask(__name__)
 
@@ -122,6 +122,13 @@ def settings():
                     config['notes_dir'] = new_dir
                     os.makedirs(new_dir, exist_ok=True)
 
+            if 'anthropic_api_key' in request.form:
+                api_key = request.form['anthropic_api_key']
+                if api_key:
+                    keyring.set_password("meadow", "anthropic_api_key", api_key)
+                    # Don't store API key in config file
+                    config.pop('anthropic_api_key', None)
+
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(config, f)
             return '', 204
@@ -131,13 +138,13 @@ def settings():
     with open(config_path, 'r', encoding='utf-8') as f:
         config = json.load(f)
 
-    # Get environment API key
-    environ_api_key = os.environ.get('ANTHROPIC_API_KEY', '')
+    # Get stored API key
+    stored_api_key = keyring.get_password("meadow", "anthropic_api_key") or os.environ.get('ANTHROPIC_API_KEY', '')
 
     template_path = os.path.join(os.path.dirname(__file__), 'templates', 'settings.html')
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
-    return render_template_string(template_content, interval=config['interval'], config=config, environ_api_key=environ_api_key)
+    return render_template_string(template_content, interval=config['interval'], config=config, stored_api_key=bool(stored_api_key))
 
 def shutdown_viewer():
     """Shutdown the Flask server and cleanup resources"""

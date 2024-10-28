@@ -23,7 +23,7 @@
         </div>
         <div class="setting-group">
             <label for="anthropic_api_key">Anthropic API Key</label>
-            <input type="text" name="anthropic_api_key" value="{{ config.get('anthropic_api_key', '')}}" placeholder="No saved key in config. {% if environ_api_key %}But a key exists in the local environment.{% endif %}"
+            <input type="password" name="anthropic_api_key" placeholder="{% if stored_api_key %}API key is securely stored{% else %}No API key found{% endif %}"
             onchange="saveSettings(this.form)">
             <p>Get your Claude API key from
                 <a href="https://console.anthropic.com">Anthropic</a>
