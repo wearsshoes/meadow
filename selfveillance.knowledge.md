@@ -10,7 +10,7 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 ## Core Design Principles
 - Skip automatic screenshots of ReThread's own interface
   - Check active window before taking screenshot
-  
+
 - UI Patterns
   - Auto-save changes immediately with visual feedback
   - Use browser-native UI components over OS-native when in web context
@@ -26,13 +26,7 @@ Application data stored in ~/Library/Application Support/ReThread/:
 - cache/thumbnails/ - Web viewer thumbnail cache
 User content stored in configurable locations:
 - All paths configurable through settings
-## Dependencies
-- rumps 0.4.0 - macOS menubar app framework
-- pillow 11.0.0 - Image processing
-- anthropic 0.37.1 - Claude API client
-- pyobjc-framework-Quartz - Native macOS window management
-- Flask 3.0.3 - Web viewer server
-- Validate loaded config has all required keys
+ - Validate loaded config has all required keys
 - Use XML tags for structured AI responses
 - Keep UI minimal and intuitive
 - menubar_app.py: UI and coordination
@@ -46,3 +40,10 @@ User content stored in configurable locations:
 - macOS only
 - Screen recording permissions
 - Anthropic API key in environment
+-
+## Dependencies
+- rumps 0.4.0 - macOS menubar app framework
+- pillow 11.0.0 - Image processing
+- anthropic 0.37.1 - Claude API client
+- pyobjc-framework-Quartz - Native macOS window management
+- Flask 3.0.3 - Web viewer server

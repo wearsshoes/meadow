@@ -1,7 +1,59 @@
+:root {
+    --bg-color: #f5f7fa;
+    --text-color: #1c1c1e;
+    --table-border: #e2e8f0;
+    --header-bg: #ffffff;
+    --header-hover: #f8fafc;
+    --accent-color: #0071e3;
+    --input-bg: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #1a1a1a;
+        --text-color: #ffffff;
+        --table-border: #444;
+        --header-bg: #2d2d2d;
+        --header-hover: #3d3d3d;
+        --input-bg: #3d3d3d;
+    }
+}
+
+body {
+    font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.5;
+}
+
 .menubar {
     background: var(--header-bg);
-    padding: 1rem;
-    margin-bottom: 2rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--table-border);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    width: 100%;
+}
+
+.nav-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-brand {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.nav-links {
+    display: flex;
+    gap: 1.5rem;
 }
 
 .nav-item {
@@ -15,68 +67,57 @@
 }
 
 .container {
-    padding: 0 2rem;
+    padding: 2rem;
+    background: var(--header-bg);
 }
 
-:root {
-    --bg-color: #ffffff;
-    --text-color: #000000;
-    --table-border: #ddd;
-    --header-bg: #f5f5f5;
-    --header-hover: #e5e5e5;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg-color: #1a1a1a;
-        --text-color: #ffffff;
-        --table-border: #444;
-        --header-bg: #2d2d2d;
-        --header-hover: #3d3d3d;
-    }
-}
-
-body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-}
 table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--header-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
+
 th, td {
-    padding: 12px;
+    padding: 16px;
     text-align: left;
     border-bottom: 1px solid var(--table-border);
 }
+
 th {
-    background-color: var(--header-bg);
+    font-weight: 500;
+    background: var(--header-bg);
     cursor: pointer;
 }
+
 th:hover {
     background-color: var(--header-hover);
 }
+
 th::after {
     content: '↕';
     margin-left: 5px;
     opacity: 0.5;
 }
+
 th.asc::after {
     content: '↓';
     opacity: 1;
 }
+
 th.desc::after {
     content: '↑';
     opacity: 1;
 }
+
 .thumbnail {
     max-width: 200px;
     max-height: 150px;
 }
 
-/* Settings styles */
 .setting-group {
     margin: 24px 0;
     max-width: 600px;
@@ -89,52 +130,27 @@ th.desc::after {
 }
 
 .setting-group input {
-    padding: 8px 12px;
+    padding: 12px;
     border: 1px solid var(--table-border);
-    border-radius: 6px;
-    background: var(--bg-color);
+    border-radius: 8px;
+    background: var(--input-bg);
     color: var(--text-color);
     width: 100%;
     font-size: 14px;
+    transition: all 0.2s;
 }
 
 .setting-group input:focus {
     outline: none;
-    border-color: #4a9eff;
-    box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.2);
-}
-
-.setting-group button {
-    margin-top: 8px;
-}
-
-button {
-    padding: 8px 16px;
-    background: #4a9eff;
-    border: none;
-    border-radius: 6px;
-    color: white;
-    cursor: pointer;
-    font-weight: 500;
-    transition: background 0.2s;
-}
-
-button:hover {
-    background: #3d8be6;
-}
-
-button[type="submit"] {
-    margin-top: 32px;
-    width: 100%;
-    max-width: 600px;
-    padding: 12px;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.2);
 }
 
 .save-notification {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background: #4CAF50;
+    background: var(--accent-color);
     color: white;
     padding: 12px 24px;
     border-radius: 4px;
@@ -147,22 +163,4 @@ button[type="submit"] {
 
 .save-notification.show {
     opacity: 1;
-}
-/* Add these styles to your existing styles.css */
-.directory-input {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.directory-input input[type="text"] {
-    flex: 1;
-    background-color: #f5f5f5;
-    cursor: default;
-}
-
-@media (prefers-color-scheme: dark) {
-    .directory-input input[type="text"] {
-        background-color: #2d2d2d;
-    }
 }

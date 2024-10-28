@@ -2,14 +2,20 @@
 <html>
 <head>
     <title>ReThread</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="{{ url_for('static', filename='js/sort.js') }}"></script>
     <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
 </head>
 <body>
     <nav class="menubar">
-        <a href="/" class="nav-item">Research Log</a>
-        <a href="/settings" class="nav-item">Settings</a>
+        <div class="nav-container">
+            <div class="nav-brand">ReThread</div>
+            <div class="nav-links">
+                <a href="/" class="nav-item">Research Log</a>
+                <a href="/settings" class="nav-item">Settings</a>
+            </div>
+        </div>
     </nav>
     {% block content %}{% endblock %}
 </body>
