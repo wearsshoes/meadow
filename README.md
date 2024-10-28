@@ -1,13 +1,12 @@
 ```markdown
-# Selfveillance Screen Monitor
-
-macOS menubar app that periodically captures and analyzes screenshots using Claude API.
+# ReThread
+macOS menubar app that acts as an AI research assistant by analyzing your screen activity using Claude API.
 
 ## Features
-- Menubar interface with screenshot controls
-- Configurable screenshot intervals
-- Automatic screenshot capture and Claude analysis
-- Web viewer for browsing screenshot history
+- Menubar interface with research tracking controls
+- Configurable analysis intervals
+- Automatic screen analysis and research outline generation
+- Web viewer for browsing research progress
 
 ## Setup
 1. Install dependencies:

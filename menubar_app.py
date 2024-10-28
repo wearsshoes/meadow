@@ -1,5 +1,5 @@
 # pylint: disable=no-name-in-module
-"""Screen Monitor App using rumps and Quartz"""
+"""Menubar app for screen monitoring using rumps and Quartz"""
 
 import io
 import os
@@ -24,9 +24,9 @@ import rumps
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-locals
-class ScreenMonitorApp(rumps.App):
+class MenubarApp(rumps.App):
     """
-    ScreenMonitorApp is a macOS menu bar application that periodically
+    A macOS menu bar application that periodically
     captures screenshots and analyzes the user's activity.
     """
 
@@ -42,17 +42,17 @@ class ScreenMonitorApp(rumps.App):
     def setup_config(self):
         """Initialize configuration settings"""
         # Set up application directories
-        self.app_dir = os.path.expanduser('~/Library/Application Support/Selfveillance')
+        self.app_dir = os.path.expanduser('~/Library/Application Support/ReThread')
         self.config_dir = os.path.join(self.app_dir, 'config')
         self.data_dir = os.path.join(self.app_dir, 'data')
         self.cache_dir = os.path.join(self.app_dir, 'cache')
-        
+
         # Create directory structure
         os.makedirs(self.config_dir, exist_ok=True)
         os.makedirs(os.path.join(self.data_dir, 'screenshots'), exist_ok=True)
         os.makedirs(os.path.join(self.data_dir, 'logs'), exist_ok=True)
         os.makedirs(os.path.join(self.cache_dir, 'thumbnails'), exist_ok=True)
-        
+
         self.config_path = os.path.join(self.config_dir, 'config.json')
         default_config = {
             'screenshot_dir': os.path.join(self.data_dir, 'screenshots'),

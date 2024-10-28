@@ -31,7 +31,3 @@ ENV/
 .vscode/
 *.swp
 *.swo
-
-# Project specific
-~/Library/Application Support/Selfveillance/
-```

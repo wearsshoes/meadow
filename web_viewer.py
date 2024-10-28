@@ -39,10 +39,7 @@ def view_log():
     Reads configuration and log files, processes log entries,
     and renders an HTML template with the log data.
     """
-    app_dir = os.path.expanduser('~/Library/Application Support/Selfveillance')
-    config_path = os.path.join(app_dir, 'config', 'config.json')
-    with open(config_path, 'r', encoding='utf-8') as f:
-        config = json.load(f)
+    app_dir = os.path.expanduser('~/Library/Application Support/ReThread')
 
     log_path = os.path.join(app_dir, 'data', 'logs', 'analysis_log.json')
     with open(log_path, 'r', encoding='utf-8') as f:

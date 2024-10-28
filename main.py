@@ -1,5 +1,5 @@
 import threading
-from screen_monitor_app import ScreenMonitorApp
+from menubar_app import MenubarApp
 from web_viewer import start_viewer
 
 def main():
@@ -8,7 +8,7 @@ def main():
     viewer_thread.start()
 
     # Start the menubar app
-    ScreenMonitorApp().run()
+    MenubarApp().run()
 
 if __name__ == "__main__":
     main()

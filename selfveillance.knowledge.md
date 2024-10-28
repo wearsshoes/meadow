@@ -1,11 +1,15 @@
-# Selfveillance Screen Monitor
-A macOS menubar app that periodically captures and analyzes your screen activity using Claude API.
-
+# ReThread
+A macOS menubar app that acts as an AI research assistant by analyzing your screen activity using Claude API.
+- Build a research companion that understands your work context
+- Generate research outlines based on your reading and writing patterns
+- Enable easy review of research progress and insights
+-
 ## Project Mission
-- Provide self-surveillance tools for personal productivity tracking
-- Generate human-readable descriptions of screen activity
-- Maintain privacy by keeping all data local
-- Enable easy review of past computer usage
+- Assist researchers by tracking and organizing their research activities
+- Generate structured outlines from screen activity and content
+- Maintain research context across multiple sources and sessions
+- Compile coherent research summaries automatically
+- Keep all data private and local
 
 ## Core Design Principles
 - State Management
@@ -34,12 +38,13 @@ Note: When updating dependencies, check for async/await usage in the codebase as
 - Separate concerns into distinct modules
 - Keep modules focused and independent
 - Use native macOS APIs for window management
-- Keep frontend assets in static files
 
 ## Data Structure
 
 Application data is stored in platform-specific user data directories:
-- macOS: ~/Library/Application Support/Selfveillance/
+- macOS: ~/Library/Application Support/ReThread/
+- Keep frontend assets in static files
+- macOS: ~/Library/Application Support/ReThread/
   - config/
     - config.json - User preferences
   - data/
@@ -50,7 +55,7 @@ Application data is stored in platform-specific user data directories:
 
 Files:
 - Screenshots saved with timestamps
-- Window information stored as app_name and window_title 
+- Window information stored as app_name and window_title
 - Analysis logs stored as JSON
 
 ## Claude Integration
@@ -69,7 +74,7 @@ messages=[{
         },
         {
             "type": "text",
-            "text": "Describe what the user is doing starting with an active verb, taking into account the full image context. Active window: [window_name]"
+            "text": "In one sentence, describe the main research activity the user is performing, starting with an active verb (e.g. 'Reading'). Consider the full image context and previous actions to maintain research continuity. Active window: [window_name]. Previous action: [prev_description]"
         }
     ]
 }]
@@ -86,19 +91,3 @@ messages=[{
 - Show loading states during async operations
 - Take first screenshot when monitoring starts
 - Format datetime objects before JSON serialization
-
-## TypeScript to Python Translation
-- Replace Promise constructor with async/await pattern
-- Use Python's asyncio instead of JS Promise chains
-- Convert arrow functions to standard Python functions
-- Replace process.env with os.environ
-- Replace node-pty with ptyprocess
-- Handle string interpolation with f-strings
-- Use Python type hints instead of TypeScript types
-
-## Code Porting Guidelines
-- Maintain exact feature parity when porting between languages
-- Port all function parameters and return types
-- Preserve error handling behavior
-- Keep test functions for verification
-- Match original terminal interaction behavior
