@@ -1,5 +1,7 @@
+# pylint: disable=no-name-in-module
+"""Screen Monitor App using rumps and Quartz"""
+
 import io
-import rumps
 import os
 import threading
 import time
@@ -17,9 +19,17 @@ from Quartz import (
     kCGWindowOwnerName,
     kCGWindowName
 )
-from anthropic import Anthropic
+from anthropic import Anthropic, AnthropicError
+import rumps
 
+# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-locals
 class ScreenMonitorApp(rumps.App):
+    """
+    ScreenMonitorApp is a macOS menu bar application that periodically
+    captures screenshots and analyzes the user's activity.
+    """
+
     def __init__(self):
         self.timer_menu_item = None  # Initialize before super().__init__
         super().__init__("📸")
@@ -38,7 +48,7 @@ class ScreenMonitorApp(rumps.App):
         }
 
         try:
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
                 self.config = json.load(f)
         except FileNotFoundError:
             self.config = default_config
@@ -75,7 +85,7 @@ class ScreenMonitorApp(rumps.App):
 
     def save_config(self):
         """Save current configuration to file"""
-        with open(self.config_path, 'w') as f:
+        with open(self.config_path, 'w', encoding='utf-8') as f:
             json.dump(self.config, f)
 
     def take_screenshot(self):
@@ -91,7 +101,7 @@ class ScreenMonitorApp(rumps.App):
         """Analyze screenshot using Claude API"""
         try:
             MAX_SIZE = (1344, 896)
-            screenshot.thumbnail(MAX_SIZE, Image.LANCZOS)
+            screenshot.thumbnail(MAX_SIZE, Image.Resampling.LANCZOS)
 
             buffered = io.BytesIO()
             screenshot.save(buffered, format="PNG")
@@ -102,7 +112,7 @@ class ScreenMonitorApp(rumps.App):
             # Get previous action for context
             try:
                 log_path = os.path.join(self.config['screenshot_dir'], 'analysis_log.json')
-                with open(log_path, 'r') as f:
+                with open(log_path, 'r', encoding='utf-8') as f:
                     logs = json.load(f)
                     prev_description = logs[-1]['description'] if logs else "N/A"
             except (FileNotFoundError, json.JSONDecodeError, IndexError):
@@ -134,20 +144,12 @@ class ScreenMonitorApp(rumps.App):
             description = message.content[0].text if message.content else "No description available"
             self.log_analysis(filename, description, timestamp, window_info)
 
-        except Exception as e:
+        except (AnthropicError, IOError, ValueError) as e:
             print(f"Error in analyze_image: {str(e)}")
 
     def log_analysis(self, filename, description, timestamp, window_info):
         """Log analysis results to JSON file"""
         log_path = os.path.join(self.config['screenshot_dir'], 'analysis_log.json')
-
-        # Get previous action from existing logs
-        try:
-            with open(log_path, 'r') as f:
-                logs = json.load(f)
-                prev_description = logs[-1]['description'] if logs else "N/A"
-        except (FileNotFoundError, json.JSONDecodeError, IndexError):
-            prev_description = "N/A"
 
         entry = {
             'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
@@ -158,14 +160,14 @@ class ScreenMonitorApp(rumps.App):
         }
 
         try:
-            with open(log_path, 'r') as f:
+            with open(log_path, 'r', encoding='utf-8') as f:
                 logs = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             logs = []
 
         logs.append(entry)
 
-        with open(log_path, 'w') as f:
+        with open(log_path, 'w', encoding='utf-8') as f:
             json.dump(logs, f, indent=2)
 
     def analyze_and_restore(self, screenshot, filename, timestamp, window_info):
@@ -194,24 +196,28 @@ class ScreenMonitorApp(rumps.App):
 
     @rumps.clicked("Analyze Current Screen")
     def take_screenshot_and_analyze(self, _):
+        """Take and analyze a screenshot of the current screen."""
         self.title = "📸 Analyzing..."
         screenshot, filename, timestamp, window_info = self.take_screenshot()
         threading.Thread(target=self.analyze_and_restore, args=(screenshot, filename, timestamp, window_info)).start()
 
     @rumps.clicked("Start Monitoring")
     def start_monitoring(self, _):
+        """Start periodic screenshot monitoring."""
         if not self.is_monitoring:
             self.is_monitoring = True
             threading.Thread(target=self.monitoring_loop).start()
 
     @rumps.clicked("Stop Monitoring")
     def stop_monitoring(self, _):
+        """Stop periodic screenshot monitoring."""
         self.is_monitoring = False
         self.title = "📸"
         self.timer_menu_item.title = "Next capture: --"
 
     @rumps.clicked("Set Interval")
     def set_interval(self, _):
+        """Display dialog to set screenshot interval in seconds."""
         cmd = f'''osascript -e 'Tell application "System Events" to display dialog "Enter interval in seconds:" \
                 default answer "{self.config["interval"]}" with title "Set Screenshot Interval"' '''
         result = os.popen(cmd).read()
@@ -231,8 +237,10 @@ class ScreenMonitorApp(rumps.App):
 
     @rumps.clicked("Open Screenshots Folder")
     def open_screenshots(self, _):
+        """Open the screenshots directory in Finder."""
         os.system(f"open {self.config['screenshot_dir']}")
 
     @rumps.clicked("Open Web Viewer")
     def open_web_viewer(self, _):
+        """Open the web viewer in default browser."""
         webbrowser.open('http://localhost:5050')

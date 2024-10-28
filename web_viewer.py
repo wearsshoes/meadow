@@ -1,9 +1,13 @@
-from flask import Flask, render_template_string
+"""
+HTML viewer for the screen monitor log
+"""
+
+import io
 import os
 import json
 import base64
 from PIL import Image
-import io
+from flask import Flask, render_template_string
 
 app = Flask(__name__)
 
@@ -25,18 +29,23 @@ def get_thumbnail_base64(image_path):
             b64_str = base64.b64encode(buffer.getvalue()).decode()
             thumbnail_cache[image_path] = b64_str
             return b64_str
-    except Exception as e:
+    except (FileNotFoundError, IOError, OSError) as e:
         print(f"Error creating thumbnail for {image_path}: {e}")
         return ""
 
 @app.route('/')
 def view_log():
+    """
+    Reads configuration and log files, processes log entries,
+    and renders an HTML template with the log data.
+    """
+
     config_path = os.path.expanduser('~/.screen_monitor_config.json')
-    with open(config_path, 'r') as f:
+    with open(config_path, 'r', encoding='utf-8') as f:
         config = json.load(f)
 
     log_path = os.path.join(config['screenshot_dir'], 'analysis_log.json')
-    with open(log_path, 'r') as f:
+    with open(log_path, 'r', encoding='utf-8') as f:
         entries = json.load(f)
 
     # Add thumbnails to entries
@@ -48,7 +57,7 @@ def view_log():
 
     # Read the template file
     template_path = os.path.join(os.path.dirname(__file__), 'templates', 'viewer.html')
-    with open(template_path, 'r') as f:
+    with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
     return render_template_string(template_content, entries=entries)
 
