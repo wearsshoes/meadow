@@ -13,6 +13,17 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Keep all data private and local
 
 ## Core Design Principles
+- Threading Constraints
+- Self-monitoring Prevention
+  - Skip automatic screenshots of ReThread's own interface
+  - Allow manual screenshots via menubar
+  - Check active window before taking screenshot, not during window detection
+  - Prevents recursive monitoring of research logs and settings
+- Self-monitoring Prevention
+  - Skip automatic screenshots of ReThread's own interface
+  - Allow manual screenshots via menubar
+  - Check active window before taking screenshot, not during window detection
+  - Prevents recursive monitoring of research logs and settings
 - Self-Monitoring Constraints
   - Exclude ReThread's own UI from automatic monitoring
   - Only capture ReThread windows when explicitly requested via menubar
@@ -40,12 +51,49 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - Architecture
   - Prefer simple solutions over complex ones
   - Use multiprocessing for clean process separation
-  - Avoid complex coordination mechanisms (signals, events, etc)
-- Clean UI
-  - Keep menubar icon simple
+  - Avoid complex coordination mechanisms (signals, events, etc)  - Clean UI
+  - Keep menubar icon simple but informative
+    - Use 📸 when idle
+    - Use 👁️ when monitoring
+    - Show status info in icon title (e.g. countdown) not menu
   - Put detailed status in menu
+  - Settings UI Patterns
+    - Auto-save changes immediately
+    - Show feedback through status messages
+    - Avoid explicit save buttons
+    - Provide immediate visual feedback for changes
+    - Apply consistent save behavior across all input types (text fields, pickers, etc)
+  - Native OS Integration
+    - Prefer browser-native UI components over OS-native when in web context
+    - Browser dialogs maintain tab/window context
+    - OS dialogs can lead to state inconsistency if user navigates away
+    - Convert paths to Unix format after selection
+    - Create chosen directories if they don't exist
+    - Folder Picker UX Constraints
+      - Disable picker button while dialog is open
+      - Center dialog relative to parent window
+      - Handle dialog dismissal gracefully
+      - Prevent multiple concurrent dialogs
+    - Apply consistent save behavior across all input types (text fields, pickers, etc)
+    - Apply consistent save behavior across all input types (text fields, pickers, etc)
+  - Native OS Integration
+    - Prefer browser-native UI components over OS-native when in web context
+    - Browser dialogs maintain tab/window context
+    - OS dialogs can lead to state inconsistency if user navigates away
+    - Convert paths to Unix format after selection
+    - Create chosen directories if they don't exist
+    - Folder Picker UX Constraints
+      - Disable picker button while dialog is open
+      - Center dialog relative to parent window
+      - Handle dialog dismissal gracefully
+      - Prevent multiple concurrent dialogs
+  - Status Display Patterns
+    - Menu items can't update while menu is open (rumps limitation)
+    - Use icon title for real-time updates
+    - Keep dropdown menu for static information
   - Use native OS interfaces when available (e.g. file pickers over custom dialogs)
   - Follow platform UI conventions
+  - Provide clear visual feedback for system state
   - Maintain consistent navigation
     - Show menubar in both native app and web interface
     - Keep core actions accessible across all views
@@ -73,7 +121,7 @@ Note: When updating dependencies, check for async/await usage in the codebase as
 
 - Module Organization
   - menubar_app.py: UI and coordination only
-    - No direct file or API operations 
+    - No direct file or API operations
     - No business logic
     - Only coordinates between modules
   - monitor.py: Screen capture and monitoring
@@ -135,7 +183,7 @@ Note: When updating dependencies, check for async/await usage in the codebase as
 
 - Module Organization
   - menubar_app.py: UI and coordination only
-    - No direct file or API operations 
+    - No direct file or API operations
     - No business logic
     - Only coordinates between modules
   - monitor.py: Screen capture and monitoring
@@ -183,6 +231,8 @@ Application data is stored in platform-specific user data directories:
     - logs/ - Analysis logs
   - cache/
     - thumbnails/ - Web viewer thumbnail cache
+  - cache/
+    - thumbnails/ - Web viewer thumbnail cache
 
 User content is stored in configurable locations:
 - Research notes default to ~/Documents/ReThread Notes
@@ -197,6 +247,16 @@ Files:
 - macOS only
 - Screen recording permissions
 - Anthropic API key in environment
+
+## Data Structure
+- Screenshots saved with timestamps
+- Window information stored as app_name and window_title
+- Analysis logs stored as JSON
+- Thumbnails cached in memory during web viewer session
+  - Max size: 400x300px
+  - Format: PNG
+  - Base64 encoded for web display
+  - Stored in ~/Library/Application Support/ReThread/cache/thumbnails/
 
 ## Best Practices
 - Keep screenshot filepath consistent
@@ -214,3 +274,8 @@ Files:
   - Use default_config as template for required keys
   - Create missing directories from config paths
   - Save config after any changes
+  - Required Settings UI Fields
+    - Screenshot directory (with folder picker)
+    - Notes directory (with folder picker)
+    - Screenshot interval
+    - Research topic

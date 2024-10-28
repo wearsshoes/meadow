@@ -19,30 +19,37 @@ def get_thumbnail_base64(image_path):
     if image_path in thumbnail_cache:
         return thumbnail_cache[image_path]
 
+    # Check disk cache
+    cache_dir = os.path.expanduser('~/Library/Application Support/ReThread/cache/thumbnails')
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, os.path.basename(image_path))
+
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, 'rb') as f:
+                b64_str = base64.b64encode(f.read()).decode()
+                thumbnail_cache[image_path] = b64_str
+                return b64_str
+        except IOError:
+            pass
+
     try:
         with Image.open(image_path) as img:
             # Create thumbnail
             img.thumbnail((400, 300))
-            # Convert to base64
+            # Save to cache
             buffer = io.BytesIO()
             img.save(buffer, format='PNG')
             b64_str = base64.b64encode(buffer.getvalue()).decode()
             thumbnail_cache[image_path] = b64_str
+            # Save to disk cache
+            img.save(cache_path, 'PNG')
             return b64_str
     except (FileNotFoundError, IOError, OSError) as e:
         print(f"Error creating thumbnail for {image_path}: {e}")
         return ""
 
-@app.route('/pick_folder')
-def pick_folder():
-    """Handle macOS folder picker dialog"""
-    cmd = '''osascript -e 'choose folder with prompt "Select Folder"' '''
-    result = os.popen(cmd).read().strip()
-    if result:
-        # Convert from AppleScript path format to Unix path
-        path = result.replace('alias Macintosh HD:', '/').replace(':', '/')
-        return jsonify({'path': path})
-    return jsonify({'path': None})
+
 
 @app.route('/')
 def view_log():
@@ -85,7 +92,7 @@ def settings():
                 new_interval = int(request.form['interval'])
                 if new_interval > 0:
                     config['interval'] = new_interval
-                    
+
             if 'research_topic' in request.form:
                 new_topic = request.form['research_topic'].strip()
                 if new_topic:
@@ -103,9 +110,21 @@ def settings():
                     config['notes_dir'] = new_dir
                     os.makedirs(new_dir, exist_ok=True)
 
+            if 'screenshot_dir' in request.form:
+                new_dir = request.form['screenshot_dir']
+                if new_dir:
+                    config['screenshot_dir'] = new_dir
+                    os.makedirs(new_dir, exist_ok=True)
+
+            if 'notes_dir' in request.form:
+                new_dir = request.form['notes_dir']
+                if new_dir:
+                    config['notes_dir'] = new_dir
+                    os.makedirs(new_dir, exist_ok=True)
+
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(config, f)
-            return redirect(url_for('settings'))
+            return '', 204
         except (ValueError, KeyError):
             pass
 
