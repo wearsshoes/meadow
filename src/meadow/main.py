@@ -1,6 +1,6 @@
 import multiprocessing
-from ui.menubar_app import MenubarApp
-from web.web_viewer import start_viewer
+from meadow.ui.menubar_app import MenubarApp
+from meadow.web.web_viewer import start_viewer
 
 def main():
     print("\n[DEBUG] Starting Meadow...")

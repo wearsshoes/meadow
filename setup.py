@@ -5,8 +5,10 @@ APP = ['src/meadow/main.py']
 DATA_FILES = [
     ('templates', ['src/meadow/web/templates/base.html',
                   'src/meadow/web/templates/viewer.html',
-                  'src/meadow/web/templates/settings.html']),
-    ('static/css', ['src/meadow/web/static/css/styles.css']),
+                  'src/meadow/web/templates/settings.html',
+                  'src/meadow/web/templates/pdf_upload.html']),
+    ('static/css', ['src/meadow/web/static/css/styles.css',
+                    'src/meadow/web/static/css/pdf_upload.css']),
     ('static/js', ['src/meadow/web/static/js/settings.js',
                    'src/meadow/web/static/js/sort.js']),
     ('resources', ['src/meadow/resources/icon.png'])
@@ -14,7 +16,7 @@ DATA_FILES = [
 OPTIONS = {
     'argv_emulation': False,
     'iconfile': 'src/meadow/resources/icon.png',
-    'packages': ['rumps', 'PIL', 'anthropic', 'flask'],
+    'packages': ['rumps', 'PIL', 'anthropic', 'flask', 'fitz'],
     'plist': {
         'LSUIElement': True,  # Makes it a menubar app without dock icon
         'CFBundleName': 'Meadow',
@@ -41,6 +43,7 @@ setup(
         'ptyprocess>=0.7.0',
         'watchdog>=5.0.3',
         'psutil>=6.1.0',
+        'PyMuPDF>=1.23.8',  # Added for PDF handling
     ],
     python_requires='>=3.8',
     entry_points={

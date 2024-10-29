@@ -1,19 +1,22 @@
 """
-HTML viewer for the screen monitor log
+HTML viewer for the screen monitor log and PDF analysis
 """
 
 import io
 import os
+import random
 import json
+import string
 from datetime import datetime
 import base64
 import keyring
 from PIL import Image
-from flask import Flask, render_template_string, request
-from ui.menubar_app import MenubarApp
-
+from flask import Flask, render_template_string, request, jsonify
+from meadow.ui.menubar_app import MenubarApp
+from meadow.core.pdf_analyzer import PDFAnalyzer
 
 app = Flask(__name__)
+pdf_analyzer = PDFAnalyzer()
 
 # Cache for thumbnails
 thumbnail_cache = {}
@@ -53,8 +56,6 @@ def get_thumbnail_base64(image_path):
         print(f"Error creating thumbnail for {image_path}: {e}")
         return ""
 
-
-
 @app.route('/open_in_finder')
 def open_in_finder():
     """Open the log file location in Finder"""
@@ -64,7 +65,64 @@ def open_in_finder():
     return '', 204
 
 @app.route('/')
-def view_log():
+def index():
+    """Render the main page with navigation"""
+    template_path = os.path.join(os.path.dirname(__file__), 'templates', 'base.html')
+    with open(template_path, 'r', encoding='utf-8') as f:
+        template_content = f.read()
+    return render_template_string(template_content)
+
+@app.route('/pdf')
+def pdf_upload():
+    """Render the PDF upload interface"""
+    template_path = os.path.join(os.path.dirname(__file__), 'templates', 'pdf_upload.html')
+    with open(template_path, 'r', encoding='utf-8') as f:
+        template_content = f.read()
+    return render_template_string(template_content)
+
+@app.route('/analyze_pdf', methods=['POST'])
+def analyze_pdf():
+    """Handle PDF analysis"""
+    app_dir = os.path.expanduser('~/Library/Application Support/Meadow')
+    config_path = os.path.join(app_dir, 'config', 'config.json')
+
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+            notes_dir = config['notes_dir']
+            temp_dir = os.path.join(notes_dir, '_machine', '_temp')
+
+        data = request.json
+        pdf_data = data.get('pdf_data')
+        if not pdf_data:
+            return jsonify({'error': 'No PDF data provided'}), 400
+
+        markdown_results = pdf_analyzer.analyze_pdf(pdf_data)
+
+        # Create _machine/_temp/notes directory if it doesn't exist
+        os.makedirs(temp_dir, exist_ok=True)
+
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Save markdown content to file
+        for result in markdown_results:
+            suffix = ''.join(random.choices(string.ascii_letters, k=4))
+            filename = f"pdf_analysis_{timestamp}{suffix}.md"
+            filepath = os.path.join(temp_dir, filename)
+
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(result)
+
+            print(f"[DEBUG] Saved analysis to {filepath}")
+
+        return jsonify({'result': {'markdown': ''.join(markdown_results)}})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/logs')
+def view_logs():
     """
     Reads configuration and log files, processes log entries,
     and renders an HTML template with the log data.
@@ -93,7 +151,7 @@ def view_log():
 
     # Add thumbnails to entries
     for entry in entries:
-        entry['thumbnail'] = get_thumbnail_base64(entry['filepath'])
+        entry['thumbnail'] = get_thumbnail_base64(entry['image_path'])
 
     # Sort by timestamp and limit to most recent 20 entries
     entries.sort(key=lambda x: x['timestamp'], reverse=True)
@@ -138,18 +196,6 @@ def settings():
                     # Create full notes structure when directory changes
                     menubarapp = MenubarApp()
                     menubarapp.create_notes_structure(new_dir)
-
-            if 'screenshot_dir' in request.form:
-                new_dir = request.form['screenshot_dir']
-                if new_dir:
-                    config['screenshot_dir'] = new_dir
-                    os.makedirs(new_dir, exist_ok=True)
-
-            if 'notes_dir' in request.form:
-                new_dir = request.form['notes_dir']
-                if new_dir:
-                    config['notes_dir'] = new_dir
-                    os.makedirs(new_dir, exist_ok=True)
 
             if 'anthropic_api_key' in request.form:
                 api_key = request.form['anthropic_api_key']
