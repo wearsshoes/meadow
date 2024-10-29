@@ -11,7 +11,7 @@ from PIL import Image
 import easyocr
 from anthropic import Anthropic, AnthropicError
 
-def analyze_and_log_screenshot(screenshot, filename, timestamp, window_info, log_path):
+def analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, log_path):
     """Analyze screenshot using OCR and Claude API, then log the results"""
     # Initialize OCR reader once
     reader = easyocr.Reader(['en'])
@@ -49,9 +49,9 @@ def analyze_and_log_screenshot(screenshot, filename, timestamp, window_info, log
                 prev_window = logs[-1]['window'] if logs else "N/A"
                 prev_description = logs[-1]['description'] if logs else "N/A"
         except (FileNotFoundError, json.JSONDecodeError, IndexError):
-            prev_description = "N/A"        # Get research topics from config
-        config_path = os.path.join(os.path.expanduser('~/Library/Application Support/Meadow'), 'config', 'config.json')
+            prev_description = "N/A"
 
+        # Get research topics from config
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
                 config = json.load(f)
@@ -105,11 +105,22 @@ Analyze the screenshot and return your response in XML format with the following
             action = extract_tag('action', response) or "Error parsing response"
             topic = extract_tag('topic', response)
             summary = extract_tag('summary', response) if topic != "none" else None
-            continuation = extract_tag('continuation', response)
+            continuation = bool(extract_tag('continuation', response))
         except (AttributeError, ValueError):
             action = "Error parsing response"
             summary = None
-        entry = LogEntry(timestamp, filename, window_info, action, topic, summary, ocr_text, prompt, response, continuation).data
+
+        entry = {
+            'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'image_path': image_path,
+            'app': window_info['app'],
+            'window': window_info['title'],
+            'description': action,
+            'research_topic': topic,
+            'research_summary': summary,
+            'ocr_text': ocr_text,
+            'continuation': continuation,
+        }
 
         # Skip if no research content
         if summary is None:
@@ -133,27 +144,27 @@ Analyze the screenshot and return your response in XML format with the following
     except (AnthropicError, IOError, ValueError) as e:
         print(f"Error in analyze_image: {str(e)}")
 
-class LogEntry:
-    """Container for analysis log entry"""
-    def __init__(self, timestamp, filename, window_info, action, topic, summary=None, ocr_text=None, claude_prompt=None, claude_response=None, continuation=False):
-        # Skip if no research content
-        if topic == 'none' or not summary:
-            self.data = None
-            return
+# class LogEntry:
+#     """Container for analysis log entry"""
+#     def __init__(self, timestamp, image_path, window_info, action, topic, summary=None, ocr_text=None, claude_prompt=None, claude_response=None, continuation=False):
+#         # Skip if no research content
+#         if topic == 'none' or not summary:
+#             self.data = None
+#             return
 
-        self.data = {
-            'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-            'filepath': filename,
-            'app': window_info['app'],
-            'window': window_info['title'],
-            'description': action,
-            'research_topic': topic,
-            'research_summary': summary,
-            'ocr_text': ocr_text,
-            'claude_prompt': claude_prompt,
-            'claude_response': claude_response,
-            'continuation': continuation,
-            'processed': False
-        }
+#         self.data = {
+#             'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+#             'image_path': image_path,
+#             'app': window_info['app'],
+#             'window': window_info['title'],
+#             'description': action,
+#             'research_topic': topic,
+#             'research_summary': summary,
+#             'ocr_text': ocr_text,
+#             'claude_prompt': claude_prompt,
+#             'claude_response': claude_response,
+#             'continuation': continuation,
+#             'processed': False
+#         }
 
 

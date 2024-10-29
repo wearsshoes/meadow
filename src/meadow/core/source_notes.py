@@ -2,7 +2,7 @@ import json
 import os
 import shutil
 from datetime import datetime
-from core.manicode_wrapper import execute_manicode
+from meadow.core.manicode_wrapper import execute_manicode
 
 class ManicodeBridge:
     """Bridge between Application Support logs and Manicode working directory"""
@@ -31,7 +31,7 @@ timestamp: {log['timestamp']}
 app: {log['app']}
 window: {log['window']}
 research_topic: {log.get('research_topic', 'none')}
-image_filepath: {log['filepath']}
+image_path: {log['image_path']}
 continuation: {log['continuation']}
 ---
 
@@ -60,6 +60,7 @@ async def generate_research_notes(notes_dir: str):
     """Generate Obsidian-style research notes from analysis logs"""
     # Get log from Application Support
     app_support_dir = os.path.expanduser('~/Library/Application Support/Meadow')
+    # TODO update path
     log_path = os.path.join(app_support_dir, 'data', 'logs', 'analysis_log.json')
 
     try:

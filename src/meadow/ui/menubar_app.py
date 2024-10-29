@@ -8,8 +8,8 @@ import json
 import webbrowser
 import asyncio
 import rumps
-from core.analyzer import analyze_and_log_screenshot
-from core.monitor import monitoring_loop, take_screenshot
+from meadow.core.screenshot_analyzer import analyze_and_log_screenshot
+from meadow.core.monitor import monitoring_loop, take_screenshot
 from meadow.core.source_notes import generate_research_notes
 
 # pylint: disable=too-many-instance-attributes
@@ -56,6 +56,7 @@ class MenubarApp(rumps.App):
         os.makedirs(os.path.join(self.cache_dir, 'thumbnails'), exist_ok=True)
 
         # Ensure log file exists and initialize if needed
+        # TODO update path
         self.log_path = os.path.join(self.log_dir, 'analysis_log.json')
         if not os.path.exists(self.log_path):
             with open(self.log_path, 'w', encoding='utf-8') as f:
@@ -119,13 +120,14 @@ class MenubarApp(rumps.App):
         except (FileNotFoundError, json.JSONDecodeError):
             pass
 
-    def log_analysis(self, filename, description, timestamp, window_info):
+    def log_analysis(self, image_path, description, timestamp, window_info):
         """Log analysis results to JSON file"""
+        # TODO update path
         log_path = os.path.join(self.data_dir, 'logs', 'analysis_log.json')
 
         entry = {
             'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-            'filepath': filename,
+            'image_path': image_path,
             'app': window_info['app'],
             'window': window_info['title'],
             'description': description,
@@ -151,11 +153,12 @@ class MenubarApp(rumps.App):
     def take_screenshot_and_analyze(self, _):
         """Take and analyze a screenshot of the current screen."""
         self.title = "📸 Analyzing..."
-        screenshot, filename, timestamp, window_info = take_screenshot(self.data_dir)
+        screenshot, image_path, timestamp, window_info = take_screenshot(self.data_dir)
+        # TODO update path
         log_path = os.path.join(self.data_dir, 'logs', 'analysis_log.json')
 
         def analyze_and_restore():
-            analyze_and_log_screenshot(screenshot, filename, timestamp, window_info, log_path)
+            analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, log_path)
             self.title = "📸"
 
         threading.Thread(target=analyze_and_restore).start()
