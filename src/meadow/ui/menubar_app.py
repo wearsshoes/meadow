@@ -8,8 +8,9 @@ import json
 import webbrowser
 import asyncio
 import rumps
-from core.analyzer import generate_research_notes, analyze_and_log_screenshot
+from core.analyzer import analyze_and_log_screenshot
 from core.monitor import monitoring_loop, take_screenshot
+from meadow.core.source_notes import generate_research_notes
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-locals
@@ -62,7 +63,6 @@ class MenubarApp(rumps.App):
 
         self.config_path = os.path.join(self.config_dir, 'config.json')
         default_config = {
-            'screenshot_dir': os.path.join(self.data_dir, 'screenshots'),
             'notes_dir': os.path.join(os.path.expanduser('~/Documents'), 'Meadow Notes'),
             'interval': 60,
             'research_topics': ['civic government']
@@ -81,7 +81,6 @@ class MenubarApp(rumps.App):
             self.config = default_config
             self.save_config()
 
-        os.makedirs(self.config['screenshot_dir'], exist_ok=True)
         self.create_notes_structure(self.config['notes_dir'])
 
         # Log path is already initialized in Application Support
@@ -152,7 +151,7 @@ class MenubarApp(rumps.App):
     def take_screenshot_and_analyze(self, _):
         """Take and analyze a screenshot of the current screen."""
         self.title = "📸 Analyzing..."
-        screenshot, filename, timestamp, window_info = take_screenshot(self.config['screenshot_dir'])
+        screenshot, filename, timestamp, window_info = take_screenshot(self.data_dir)
         log_path = os.path.join(self.data_dir, 'logs', 'analysis_log.json')
 
         def analyze_and_restore():
@@ -188,7 +187,7 @@ class MenubarApp(rumps.App):
     @rumps.clicked("Open Screenshots Folder")
     def open_screenshots(self, _):
         """Open the screenshots directory in Finder."""
-        subprocess.run(['open', self.config['screenshot_dir']], check=True)
+        subprocess.run(['open', os.path.join(self.data_dir, 'screenshots')], check=True)
 
     @rumps.clicked("Open Notes Folder")
     def open_notes(self, _):
@@ -206,7 +205,7 @@ class MenubarApp(rumps.App):
         self.title = "📝"
 
         async def generate():
-            await generate_research_notes(self.config['notes_dir'], self.config.get('research_topics', ['civic government']))
+            await generate_research_notes(self.config['notes_dir'])
             self.title = "📸"
             subprocess.run(['open', self.config['notes_dir']], check=True)
 

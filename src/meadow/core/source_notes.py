@@ -2,7 +2,7 @@ import json
 import os
 import shutil
 from datetime import datetime
-from manicode_wrapper import execute_manicode
+from core.manicode_wrapper import execute_manicode
 
 class ManicodeBridge:
     """Bridge between Application Support logs and Manicode working directory"""
@@ -30,7 +30,7 @@ class ManicodeBridge:
 timestamp: {log['timestamp']}
 app: {log['app']}
 window: {log['window']}
-research_topic: {log['research_topic']}
+research_topic: {log.get('research_topic', 'none')}
 image_filepath: {log['filepath']}
 continuation: {log['continuation']}
 ---
@@ -74,7 +74,7 @@ async def generate_research_notes(notes_dir: str):
         unprocessed_logs = []
 
         for filename in os.listdir(log_dir):
-            if filename.startswith('log_') and filename.endswith('.json'):
+            if filename.startswith('log_') and filename.endswith('.json') and len(filename) == 17:  # log_YYYYMMDD.json
                 log_file = os.path.join(log_dir, filename)
                 with open(log_file, 'r', encoding='utf-8') as f:
                     logs = json.load(f)

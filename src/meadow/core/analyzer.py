@@ -1,4 +1,4 @@
-# pylint: disable=relative-beyond-top-level
+
 """Module for analyzing screenshots using Claude API"""
 
 import base64
@@ -10,7 +10,6 @@ import numpy as np
 from PIL import Image
 import easyocr
 from anthropic import Anthropic, AnthropicError
-from .manicode_wrapper import execute_manicode
 
 def analyze_and_log_screenshot(screenshot, filename, timestamp, window_info, log_path):
     """Analyze screenshot using OCR and Claude API, then log the results"""
@@ -133,36 +132,6 @@ Analyze the screenshot and return your response in XML format with the following
 
     except (AnthropicError, IOError, ValueError) as e:
         print(f"Error in analyze_image: {str(e)}")
-
-async def generate_research_notes(notes_dir: str, research_topics: list[str]):
-    """Generate Obsidian-style research notes from analysis logs"""
-    try:
-        print("\n[DEBUG] Starting research note generation...")
-        print(f"[DEBUG] Using notes directory: {notes_dir} and these research topics: {', '.join(research_topics)}")
-
-        # Get log from Application Support
-        log_path = os.path.join(os.path.expanduser('~/Library/Application Support/Meadow'), 'data', 'logs', 'analysis_log.json')
-
-        with open(log_path, 'r', encoding='utf-8') as f:
-            logs = json.load(f)
-
-        print(f"[DEBUG] Found {len(logs)} log entries")
-
-        instructions = f"""
-        1. Review the most recent usage logs for content related to these research topics: {', '.join(research_topics)}
-        2. Capture key concepts and findings from the research by creating new Obsidian-style markdown notes, or adding to existing ones.
-        3. Include a human-readable date and time corresponding to the log to maintain context.
-        4. Connect related notes with [[wiki-style]] links.
-        5. Organize within subfolders by topic.
-        6. Finish by updating the knowledge file to capture details about the file organization.
-        """
-
-        await execute_manicode(instructions, {
-            "cwd": notes_dir
-        }, allow_notes=True)
-
-    except (IOError, json.JSONDecodeError) as e:
-        print(f"Error generating notes: {e}")
 
 class LogEntry:
     """Container for analysis log entry"""

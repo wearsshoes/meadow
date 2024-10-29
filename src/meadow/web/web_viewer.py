@@ -10,6 +10,8 @@ import base64
 import keyring
 from PIL import Image
 from flask import Flask, render_template_string, request
+from ui.menubar_app import MenubarApp
+
 
 app = Flask(__name__)
 
@@ -134,9 +136,8 @@ def settings():
                 if new_dir:
                     config['notes_dir'] = new_dir
                     # Create full notes structure when directory changes
-                    from meadow.ui.menubar_app import MenubarApp
-                    app = MenubarApp()
-                    app.create_notes_structure(new_dir)
+                    menubarapp = MenubarApp()
+                    menubarapp.create_notes_structure(new_dir)
 
             if 'screenshot_dir' in request.form:
                 new_dir = request.form['screenshot_dir']

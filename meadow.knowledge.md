@@ -122,10 +122,16 @@ Notes folder (Location set by user):
 ## Logging Patterns
 - Store complete context with each log entry:
   - Raw inputs (screenshots, window info)
-  - Processing steps (OCR text, prompts)
+  - Processing steps (OCR text, prompts) 
   - Analysis results (summaries, topics)
   - Continuation status
 - Initialize empty log files with valid JSON ([])
+- Use dated log files (log_YYYYMMDD.json) for better organization
+- Handle optional fields defensively:
+  - research_topic may be missing/none for non-research content
+  - summary may be empty for non-relevant content
+  - continuation may be unknown for first entries
+- Log files should be read from Application Support, not notes directory
 
 ## Initialization Patterns
 - Create all required directories on startup before any operations
