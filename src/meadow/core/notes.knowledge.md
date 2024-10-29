@@ -20,8 +20,8 @@
 ## Directory Structure and Organization
 Example:
 ```
-   screenshots/
-   notes/
+   notes/                                     # parent folder, may be named differently
+      _screenshots/                           # Captured by monitoring
       _machine/                               # App-managed source notes
       city_governance/                        # Organized by topic
          san_mateo_budget_pdf/                # Organized by source
@@ -78,7 +78,7 @@ User notes:
 
 Understand the Current State of Knowledge
 - Review the structure and content of the existing notes.
-- Locate and process new JSON logs in the directory containing potential new information.
+- Locate and process new logs in the _temp_logs/ directory containing potential new information.
 
 Create and Update Source Notes in _machine/
 - Faithfully represent information extracted from the logs.

@@ -1,9 +1,6 @@
 # Meadow
 A macOS menubar app that acts as an AI research assistant by analyzing your screen activity using Claude API.
 
-## Knowledge Organization
-Information about how the manicode wrapper interacts with notes is stored in ./src/meadow/core/notes.knowledge.md
-
 ## Project Mission
 - Assist researchers by tracking and analyzing topic-relevant content
 - Filter and analyze content based on configured research topics
@@ -46,14 +43,19 @@ Application data in ~/Library/Application Support/Meadow/:
 - cache/thumbnails/ - Web viewer thumbnail
 
 Notes folder (Location set by user):
-- notes.knowledge.md - contains info about the organization of the notes for manicode's sake.
-- _machine/ - (TODO) atomic notes from source material
-  - browsers/ - organized by browser and URL
-  - apps/ - organized by application
-  - metadata.json - tracks processed logs
-- research/ - (TODO) user's research notes with AI contributions
-- screenshots/ - screenshots generated from monitoring
-- this entire folder is accessible to manicode via the wrapper.
+```
+   notes/                                     # parent folder, may be named differently
+      _screenshots/                           # Captured by monitoring
+      _machine/                               # App-managed source notes
+      city_governance/                        # Organized by topic
+         san_mateo_budget_pdf/                # Organized by source
+            fiscal_summary.md                 # Subtopic
+            public_works.md                   # Subtopic
+         city_governance.knowledge.md         # Compares sources
+      machine_notes.knowledge.md              # Tracks research topics
+      research/                               # User knowledge space
+      meadow_notes.knowledge.md               # Overall description of research folder
+```
 
 ## Dependencies
 - rumps - macOS menubar app framework
@@ -99,6 +101,24 @@ Notes folder (Location set by user):
   - Enforce privacy levels in content
   - Maintain clear evidence chains
   - Handle content redaction
+
+## How manicode.ai works
+- Designed for code editing, also works well for other tasks
+- NPM library which is an API to a backend server, which itself sends requests to LLMs
+- Simple interface where the user can enter a prompt
+- Can also accept a folderpath and a prompt as an argument when being called
+- Reads *.knowledge.md files in working directory
+- Reads relevant subset of other files from directory
+- Uses LLM backend to determine what changes are needed to satisfy user request and generate those changes
+- Can edit files directly and run shell commands
+
+## How manicode_wrapper.py works with the Meadow note system
+- json_to_markdown.py bridges the raw notes from the JSON into the markdown
+- manicode_wrapper.py creates a PTY terminal to instantiate manicode at the notes/ folder
+- calls manicode with instructions to process the raw notes into the research structure
+- kills the process once the action is complete or if the API times out
+- does not work well with long prompts due to PTY and API issues
+- manicode is fairly expensive, but can do a lot in one go, so should be called less and asked to do more each time.
 
 ## Logging Patterns
 - Store complete context with each log entry:
@@ -158,6 +178,7 @@ Notes folder (Location set by user):
 ### Critical Path
 
 1. Note System Implementation
+   - Make sure manicode is correctly packaged
    - Create _machine/ directory structure
       ```
         screenshots/
@@ -172,24 +193,9 @@ Notes folder (Location set by user):
           research/                               # User knowledge space
           meadow_notes.knowledge.md               # Overall description of research folder
       ```
-
-   - Implement metadata tracking
    - Add browser URL capture
-   - Add privacy filtering system
-   - Add note contribution system
-   - Include Manicode if necessary.
    - Implement metadata frontmatter handling
-   - Add privacy levels and content redaction
-   - Create machine/user space separation
-   - Add epistemic status tracking
-   - Implement browser integration for URL capture
-
-1. Security & Privacy
-   - Document data privacy practices
-   - Add data deletion/export options
-   - Add privacy level enforcement
-   - Implement content redaction system
-   - Add atomic note generation
+   - Add privacy levels and filtering system
 
 2. Documentation
    - Installation guide for non-technical users
@@ -226,3 +232,10 @@ Notes folder (Location set by user):
    - Mac App Store submission
    - Update notification system
    - Analytics for crash reporting
+
+5. Security & Privacy
+   - Document data privacy practices
+   - Add data deletion/export options
+   - Add privacy level enforcement
+   - Implement content redaction system
+   - Add atomic note generation

@@ -112,15 +112,23 @@ Analyze the screenshot and return your response in XML format with the following
             summary = None
         entry = LogEntry(timestamp, filename, window_info, action, topic, summary, ocr_text, prompt, response, continuation).data
 
+        # Skip if no research content
+        if summary is None:
+            return
+
+        # Use dated log file
+        log_dir = os.path.dirname(log_path)
+        dated_log = os.path.join(log_dir, f"log_{timestamp.strftime('%Y%m%d')}.json")
+
         try:
-            with open(log_path, 'r', encoding='utf-8') as f:
+            with open(dated_log, 'r', encoding='utf-8') as f:
                 logs = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             logs = []
 
         logs.append(entry)
 
-        with open(log_path, 'w', encoding='utf-8') as f:
+        with open(dated_log, 'w', encoding='utf-8') as f:
             json.dump(logs, f, indent=2)
 
     except (AnthropicError, IOError, ValueError) as e:
@@ -159,6 +167,11 @@ async def generate_research_notes(notes_dir: str, research_topics: list[str]):
 class LogEntry:
     """Container for analysis log entry"""
     def __init__(self, timestamp, filename, window_info, action, topic, summary=None, ocr_text=None, claude_prompt=None, claude_response=None, continuation=False):
+        # Skip if no research content
+        if topic == 'none' or not summary:
+            self.data = None
+            return
+
         self.data = {
             'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
             'filepath': filename,
@@ -170,7 +183,8 @@ class LogEntry:
             'ocr_text': ocr_text,
             'claude_prompt': claude_prompt,
             'claude_response': claude_response,
-            'continuation': continuation
+            'continuation': continuation,
+            'processed': False
         }
 
 
