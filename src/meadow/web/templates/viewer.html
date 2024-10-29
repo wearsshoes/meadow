@@ -3,7 +3,14 @@
 <div class="container">
     <h1>Research Log</h1>
     <div class="header-actions">
-        <button onclick="window.location.href='open_log_file'" class="action-button">Open Log File</button>
+        <select onchange="window.location.href='/?date=' + this.value">
+            {% for date in dates %}
+            <option value="{{ date }}" {% if date == selected_date %}selected{% endif %}>
+                {{ date[:4] }}-{{ date[4:6] }}-{{ date[6:] }}
+            </option>
+            {% endfor %}
+        </select>
+        <button onclick="window.location.href='open_in_finder'" class="action-button">Open in Finder</button>
     </div>
     <div class="entries">
         {% for entry in entries %}

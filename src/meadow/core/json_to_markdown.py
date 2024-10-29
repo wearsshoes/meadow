@@ -72,7 +72,7 @@ async def generate_research_notes(notes_dir: str):
         # Get all unprocessed logs from dated files
         log_dir = os.path.dirname(log_path)
         unprocessed_logs = []
-        
+
         for filename in os.listdir(log_dir):
             if filename.startswith('log_') and filename.endswith('.json'):
                 log_file = os.path.join(log_dir, filename)
@@ -81,7 +81,7 @@ async def generate_research_notes(notes_dir: str):
                     # Filter for unprocessed logs
                     unprocessed = [log for log in logs if not log.get('processed', False)]
                     unprocessed_logs.extend(unprocessed)
-                    
+
                     # Update processed status
                     if unprocessed:
                         for log in logs:
@@ -89,7 +89,7 @@ async def generate_research_notes(notes_dir: str):
                                 log['processed'] = True
                         with open(log_file, 'w', encoding='utf-8') as f:
                             json.dump(logs, f, indent=2)
-                            
+
         bridge.convert_logs_to_markdown(unprocessed_logs)
 
         # Set up manicode instructions to read from _temp_logs

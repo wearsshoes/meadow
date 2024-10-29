@@ -5,6 +5,7 @@ HTML viewer for the screen monitor log
 import io
 import os
 import json
+from datetime import datetime
 import base64
 import keyring
 from PIL import Image
@@ -52,8 +53,8 @@ def get_thumbnail_base64(image_path):
 
 
 
-@app.route('/open_log_file')
-def open_log_file():
+@app.route('/open_in_finder')
+def open_in_finder():
     """Open the log file location in Finder"""
     app_dir = os.path.expanduser('~/Library/Application Support/Meadow')
     log_path = os.path.join(app_dir, 'data', 'logs')
@@ -67,10 +68,26 @@ def view_log():
     and renders an HTML template with the log data.
     """
     app_dir = os.path.expanduser('~/Library/Application Support/Meadow')
+    log_dir = os.path.join(app_dir, 'data', 'logs')
 
-    log_path = os.path.join(app_dir, 'data', 'logs', 'analysis_log.json')
-    with open(log_path, 'r', encoding='utf-8') as f:
-        entries = json.load(f)
+    # Get selected date from query params, default to today
+    selected_date = request.args.get('date', datetime.now().strftime('%Y%m%d'))
+
+    # Get list of available dates
+    dates = []
+    for filename in os.listdir(log_dir):
+        if filename.startswith('log_') and filename.endswith('.json'):
+            date = filename[4:12]  # Extract YYYYMMDD from filename
+            dates.append(date)
+    dates.sort(reverse=True)
+
+    # Read selected log file
+    log_path = os.path.join(log_dir, f'log_{selected_date}.json')
+    try:
+        with open(log_path, 'r', encoding='utf-8') as f:
+            entries = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        entries = []
 
     # Add thumbnails to entries
     for entry in entries:
@@ -84,7 +101,7 @@ def view_log():
     template_path = os.path.join(os.path.dirname(__file__), 'templates', 'viewer.html')
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
-    return render_template_string(template_content, entries=entries)
+    return render_template_string(template_content, entries=entries, dates=dates, selected_date=selected_date)
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
@@ -116,7 +133,10 @@ def settings():
                 new_dir = request.form['notes_dir']
                 if new_dir:
                     config['notes_dir'] = new_dir
-                    os.makedirs(new_dir, exist_ok=True)
+                    # Create full notes structure when directory changes
+                    from meadow.ui.menubar_app import MenubarApp
+                    app = MenubarApp()
+                    app.create_notes_structure(new_dir)
 
             if 'screenshot_dir' in request.form:
                 new_dir = request.form['screenshot_dir']
