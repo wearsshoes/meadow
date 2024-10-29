@@ -13,10 +13,7 @@
             <label for="research_topics">Research Topics (one per line)</label>
             <textarea name="research_topics" rows="5" cols="60" onchange="saveSettings(this.form)">{{ '\n'.join(config.get('research_topics', [])) }}</textarea>
         </div>
-        <div class="setting-group">
-            <label for="screenshot_dir">Screenshots Directory</label>
-            <input type="text" name="screenshot_dir" value="{{ config['screenshot_dir'] }}" onchange="saveSettings(this.form)">
-        </div>
+
         <div class="setting-group">
             <label for="notes_dir">Notes Directory</label>
             <input type="text" name="notes_dir" value="{{ config['notes_dir'] }}" onchange="saveSettings(this.form)">

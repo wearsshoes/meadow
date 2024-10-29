@@ -45,7 +45,6 @@ Application data in ~/Library/Application Support/Meadow/:
 Notes folder (Location set by user):
 ```
    notes/                                     # parent folder, may be named differently
-      _screenshots/                           # Captured by monitoring
       _machine/                               # App-managed source notes
       city_governance/                        # Organized by topic
          san_mateo_budget_pdf/                # Organized by source

@@ -32,6 +32,12 @@ class MenubarApp(rumps.App):
         # Check config changes every 5 seconds
         rumps.Timer(self.check_config_changes, 5).start()
 
+    def create_notes_structure(self, notes_dir):
+        """Create the standard notes directory structure"""
+        os.makedirs(notes_dir, exist_ok=True)
+        os.makedirs(os.path.join(notes_dir, '_machine'), exist_ok=True)
+        os.makedirs(os.path.join(notes_dir, 'research'), exist_ok=True)
+
     def setup_config(self):
         """Initialize configuration settings"""
         print("[DEBUG] Setting up configuration...")
@@ -76,7 +82,7 @@ class MenubarApp(rumps.App):
             self.save_config()
 
         os.makedirs(self.config['screenshot_dir'], exist_ok=True)
-        os.makedirs(self.config['notes_dir'], exist_ok=True)
+        self.create_notes_structure(self.config['notes_dir'])
 
         # Log path is already initialized in Application Support
 
@@ -198,7 +204,6 @@ class MenubarApp(rumps.App):
     def generate_notes(self, _):
         """Generate Obsidian-style research notes from logs."""
         self.title = "📝"
-        log_path = os.path.join(self.data_dir, 'logs', 'analysis_log.json')
 
         async def generate():
             await generate_research_notes(self.config['notes_dir'], self.config.get('research_topics', ['civic government']))

@@ -40,12 +40,14 @@ def get_active_window_info():
             return {'app': app, 'title': title}
     return {'app': 'Unknown App', 'title': 'No Title'}
 
-def take_screenshot(screenshot_dir):
+def take_screenshot(data_dir):
     """Capture and save a screenshot, returns (screenshot, filename, timestamp, window_info)"""
     # Get the primary monitor's region for screenshot
     screenshot = ImageGrab.grab(all_screens=False)  # Only grab primary screen
     timestamp = datetime.now()
     window_info = get_active_window_info()
+    screenshot_dir = os.path.join(data_dir, 'screenshots')
+    os.makedirs(screenshot_dir, exist_ok=True)
     filename = os.path.join(screenshot_dir, f"screenshot_{timestamp.strftime('%Y%m%d_%H%M%S')}.png")
     screenshot.save(filename)
     return screenshot, filename, timestamp, window_info
