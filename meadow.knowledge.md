@@ -101,6 +101,20 @@ Notes folder (Location set by user):
   - Use EasyOCR for text extraction
     - Requires input as numpy array, not PIL Image
     - Convert using np.array(image) before passing to readtext()
+    - Initialize reader once at module level, not per function
+    - Reader loads ML model which is expensive
+    - Share reader instance across screenshot analysis calls
+  - Consider macOS Vision API alternative
+    - Native system capability could be faster
+    - Better platform integration
+    - Would reduce ML model loading overhead
+    - TODO: Evaluate Vision API performance vs EasyOCR
+  - Future improvement: Consider switching to macOS Vision framework
+    - Native to macOS and optimized for Apple Silicon
+    - No external ML model loading required
+    - Better system integration
+    - Lower memory footprint
+    - Would require pyobjc-framework-Vision
 
 - Minimize API calls
   - Check for duplicate/similar content before sending

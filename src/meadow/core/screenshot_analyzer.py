@@ -10,10 +10,20 @@ from PIL import Image
 import easyocr
 from anthropic import Anthropic, AnthropicError
 
+# Initialize OCR reader once as a module-level singleton
+_ocr_reader = None
+
+def get_ocr_reader():
+    """Get or initialize the OCR reader singleton"""
+    global _ocr_reader
+    if _ocr_reader is None:
+        _ocr_reader = easyocr.Reader(['en'])
+    return _ocr_reader
+
 def analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, log_path):
     """Analyze screenshot using OCR and Claude API, then log the results"""
-    # Initialize OCR reader once
-    reader = easyocr.Reader(['en'])
+    # Get the singleton OCR reader
+    reader = get_ocr_reader()
 
     # Extract text from image
     img_array = np.array(screenshot)
