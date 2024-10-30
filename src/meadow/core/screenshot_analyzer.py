@@ -21,8 +21,12 @@ def analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, l
     ocr_text = ' '.join(ocr_text)
     print("OCR extracted text:", ocr_text)
     try:
-        max_size = (1344, 896)
-        screenshot.thumbnail(max_size, Image.Resampling.LANCZOS)
+        # Resize to max dimension of 1024 while preserving aspect ratio
+        max_size = 1024
+        ratio = max_size / max(screenshot.size)
+        if ratio < 1:
+            new_size = tuple(int(dim * ratio) for dim in screenshot.size)
+            screenshot = screenshot.resize(new_size, Image.Resampling.LANCZOS)
 
         buffered = io.BytesIO()
         screenshot.save(buffered, format="PNG")

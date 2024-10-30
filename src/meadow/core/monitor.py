@@ -5,7 +5,7 @@ import os
 import threading
 import time
 from datetime import datetime
-from PIL import ImageGrab
+from PIL import ImageGrab, Image
 from Quartz import (
     CGWindowListCopyWindowInfo,
     kCGWindowListOptionOnScreenOnly,
@@ -13,8 +13,17 @@ from Quartz import (
     kCGWindowIsOnscreen,
     kCGWindowLayer,
     kCGWindowOwnerName,
-    kCGWindowName
+    kCGWindowName,
+    CGWindowListCreateImage,
+    CGRectNull,
+    kCGWindowListOptionIncludingWindow,
+    CGImageGetWidth,
+    CGImageGetHeight,
+    CGImageGetDataProvider,
+    CGDataProviderCopyData,
+    CGImageGetBytesPerRow
 )
+import numpy as np
 
 from meadow.core.screenshot_analyzer import analyze_and_log_screenshot
 
@@ -41,10 +50,39 @@ def get_active_window_info():
 
 def take_screenshot(data_dir):
     """Capture and save a screenshot, returns (screenshot, image_path, timestamp, window_info)"""
-    # Get the primary monitor's region for screenshot
+    # Get the active window info
+    window_info = get_active_window_info()
     screenshot = None
     try:
-        screenshot = ImageGrab.grab(all_screens=False)  # Only grab primary screen
+        # Find the window ID for the active window
+        window_list = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID)
+        window_id = None
+        for window in window_list:
+            if (window.get(kCGWindowOwnerName) == window_info['app'] and
+                window.get(kCGWindowName) == window_info['title']):
+                window_id = window.get('kCGWindowNumber')
+                break
+
+        if window_id:
+            # Capture just this window using native API
+            cg_image = CGWindowListCreateImage(
+                CGRectNull,  # Null rect means capture the whole window
+                kCGWindowListOptionIncludingWindow,  # Only capture the specified window
+                window_id,  # The window to capture
+                0  # No image options
+            )
+            if cg_image:
+                # Convert CG image to PIL Image
+                width = CGImageGetWidth(cg_image)
+                height = CGImageGetHeight(cg_image)
+                data = CGDataProviderCopyData(CGImageGetDataProvider(cg_image))
+                bytes_per_row = CGImageGetBytesPerRow(cg_image)
+                np_array = np.frombuffer(data, dtype=np.uint8).reshape((height, bytes_per_row // 4, 4))
+                screenshot = Image.fromarray(np_array[:,:,:3])  # Drop alpha channel
+
+        if screenshot is None:  # Fallback to full screen if window capture fails
+            print("[DEBUG] Failed to capture active window. Capturing entire screen.")
+            screenshot = ImageGrab.grab(all_screens=False)
         timestamp = datetime.now()
         window_info = get_active_window_info()
         screenshot_dir = os.path.join(data_dir, 'screenshots')
