@@ -21,6 +21,11 @@ class MarkdownBridge:
             filename = f"log_{timestamp.strftime('%Y%m%d_%H%M%S')}.md"
             filepath = os.path.join(self.lognotes_dir, filename)
 
+            # TODO: Add proper path escaping for YAML headers to handle special characters
+
+            # Prepare URL field if available
+            url_field = f"url: {log['url']}\n" if log.get('url') else ""
+
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(f"""---
 timestamp: {log['timestamp']}
@@ -29,7 +34,7 @@ window: {log['window']}
 research_topic: {log.get('research_topic', 'none')}
 image_path: {log['image_path']}
 continuation: {log['continuation']}
----
+{url_field}---
 
 # {log['window']}
 

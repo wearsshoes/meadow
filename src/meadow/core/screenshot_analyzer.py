@@ -6,6 +6,7 @@ import json
 import os
 import queue
 import threading
+import asyncio
 
 import Vision
 from anthropic import Anthropic, AnthropicError
@@ -80,6 +81,8 @@ def analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, l
     """Analyze screenshot using OCR and Claude API, then log the results"""
     try:
         ocr_text = ocr_processor.get_text_from_image(screenshot, image_path)
+        print(f"[DEBUG] Extracted text length: {len(ocr_text)} characters")
+        print("[DEBUG] First 200 characters of extracted text:", ocr_text[:200])
 
         # Get research topics from config
         config_path = os.path.join(os.path.expanduser('~/Library/Application Support/Meadow'), 'config', 'config.json')
@@ -90,9 +93,11 @@ def analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, l
         except (FileNotFoundError, json.JSONDecodeError):
             research_topics = ['civic government']
 
+        print(f"[DEBUG] Checking relevance against topics: {research_topics}")
+
         # Check topic relevance
         from meadow.core.topic_similarity import check_topic_relevance
-        if not check_topic_relevance(ocr_text, research_topics):
+        if not asyncio.run(check_topic_relevance(ocr_text, research_topics)):
             print("Content not relevant to research topics")
             try:
                 os.remove(image_path)  # Clean up irrelevant screenshot
@@ -128,16 +133,11 @@ def analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, l
             prev_window = "N/A"
             prev_description = "N/A"
 
-        # Get research topics from config
-        try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-                research_topics = config.get('research_topics', ['civic government'])
-        except (FileNotFoundError, json.JSONDecodeError):
-            research_topics = ['civic government']
+        # Include URL in prompt if available
+        url_info = f"\nURL: {window_info['url']}" if window_info.get('url') else ""
 
         prompt = f"""
-Name of active window: {window_info['app']} - {window_info['title']}
+Name of active window: {window_info['app']} - {window_info['title']}{url_info}
 Previous action: {prev_description} in "{prev_app} - {prev_window}"
 Active research topics: {', '.join(research_topics)}
 Analyze the screenshot and return your response in XML format with the following tags:
@@ -147,7 +147,6 @@ Analyze the screenshot and return your response in XML format with the following
 <continuation>true/false: The current action is essentially the same as the previous action.</continuation>
 """
 
-        # Include previous action in prompt
         print("[DEBUG] Sending to Claude")
 
         message = client.messages.create(
@@ -195,6 +194,7 @@ Analyze the screenshot and return your response in XML format with the following
             'image_path': image_path,
             'app': window_info['app'],
             'window': window_info['title'],
+            'url': window_info.get('url'),  # Include URL in log entry
             'description': action,
             'research_topic': topic,
             'research_summary': summary,

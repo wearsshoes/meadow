@@ -4,8 +4,10 @@
 import os
 import threading
 import time
+import asyncio
 from datetime import datetime
 from PIL import ImageGrab
+import subprocess
 
 from Quartz import (
     CGWindowListCopyWindowInfo,
@@ -25,6 +27,36 @@ from Quartz import (
 )
 
 from meadow.core.screenshot_analyzer import analyze_and_log_screenshot
+from meadow.core.topic_similarity import initialize_model
+
+def get_browser_url(app_name):
+    """Get URL from browser using AppleScript"""
+    browsers = {
+        'Google Chrome': '''
+            tell application "Google Chrome"
+                get URL of active tab of front window
+            end tell
+        ''',
+        'Safari': '''
+            tell application "Safari"
+                get URL of current tab of front window
+            end tell
+        ''',
+        'Firefox': '''
+            tell application "Firefox"
+                get URL of active tab of front window
+            end tell
+        '''
+    }
+
+    if app_name in browsers:
+        try:
+            result = subprocess.run(['osascript', '-e', browsers[app_name]],
+                                  capture_output=True, text=True, check=True)
+            return result.stdout.strip()
+        except subprocess.SubprocessError:
+            return None
+    return None
 
 def get_active_window_info():
     """Get active window info using Quartz"""
@@ -35,6 +67,7 @@ def get_active_window_info():
             raise PermissionError("Screen recording permission is required. Please enable it in System Preferences > Security & Privacy > Privacy > Screen Recording")
     except Exception as e:
         raise PermissionError("Unable to access screen content. Please check screen recording permissions.") from e
+
     window_list = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID)
     for window in window_list:
         # Skip system UI elements
@@ -44,8 +77,15 @@ def get_active_window_info():
 
         if window.get(kCGWindowIsOnscreen) and window.get(kCGWindowLayer, 0) == 0:
             title = window.get(kCGWindowName, 'No Title')
-            return {'app': app, 'title': title}
-    return {'app': 'Unknown App', 'title': 'No Title'}
+            url = None
+
+            # Try to get URL if it's a browser
+            # TODO: other browsers exist
+            if app in ['Google Chrome', 'Safari', 'Firefox']:
+                url = get_browser_url(app)
+
+            return {'app': app, 'title': title, 'url': url}
+    return {'app': 'Unknown App', 'title': 'No Title', 'url': None}
 
 def take_screenshot(data_dir):
     """Capture and save a screenshot, returns (screenshot, image_path, timestamp, window_info)"""
@@ -95,6 +135,9 @@ def take_screenshot(data_dir):
 
 def monitoring_loop(get_config, timer_menu_item, is_monitoring_ref, data_dir, set_title):
     """Main monitoring loop"""
+    # Initialize model at start of monitoring
+    asyncio.run(initialize_model())
+
     config = get_config()
     print(f"[DEBUG] Starting monitoring loop with interval: {config['interval']}")
     next_screenshot = time.time() + config['interval']
