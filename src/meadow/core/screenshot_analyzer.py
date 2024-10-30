@@ -124,6 +124,7 @@ Analyze the screenshot and return your response in XML format with the following
 
         # Skip if no research content
         if summary is None:
+            print("Took a screenshot, but it was irrelevant to research.")
             return None
 
         # Use dated log file

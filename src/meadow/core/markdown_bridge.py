@@ -51,12 +51,13 @@ continuation: {log['continuation']}
 {log['ocr_text']}
 ```
 """)
+        print(f"Saved converted md to {filepath}.")
 
     def cleanup(self):
         """Clean up temporary files after manicode is done"""
         shutil.rmtree(self.temp_logs_dir)
 
-def process_analysis_result(analysis_result: dict, notes_dir: str):
+async def process_analysis_result(analysis_result: dict, notes_dir: str):
     """Process a single analysis result immediately after screenshot analysis"""
     try:
         print("\n[DEBUG] Processing single analysis result...")

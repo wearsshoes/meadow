@@ -25,6 +25,7 @@ OPTIONS = {
         'CFBundleVersion': '0.1.0',
         'CFBundleShortVersionString': '0.1.0',
         'NSRequiresAquaSystemAppearance': False,  # Enable dark mode support
+        'NSScreenCaptureUsageDescription': 'Meadow needs screen recording permission to analyze your research activity.',  # Screen recording permission prompt
     },
 }
 

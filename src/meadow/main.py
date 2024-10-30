@@ -8,12 +8,19 @@ def main():
     viewer_process = multiprocessing.Process(target=start_viewer)
     viewer_process.start()
 
-    # Start the menubar app
-    MenubarApp().run()
-
-    # When the menubar app exits, terminate the web viewer process
-    viewer_process.terminate()
-    viewer_process.join()
+    try:
+        # Start the menubar app
+        MenubarApp().run()
+    except Exception as e:
+        print(f"[ERROR] Menubar app crashed: {e}")
+    finally:
+        # Always clean up the web viewer process
+        print("[DEBUG] Cleaning up web viewer...")
+        viewer_process.terminate()
+        viewer_process.join(timeout=5)  # Wait up to 5 seconds
+        if viewer_process.is_alive():
+            viewer_process.kill()  # Force kill if still running
+            viewer_process.join()
 
 if __name__ == "__main__":
     main()

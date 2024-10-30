@@ -42,14 +42,20 @@ def get_active_window_info():
 def take_screenshot(data_dir):
     """Capture and save a screenshot, returns (screenshot, image_path, timestamp, window_info)"""
     # Get the primary monitor's region for screenshot
-    screenshot = ImageGrab.grab(all_screens=False)  # Only grab primary screen
-    timestamp = datetime.now()
-    window_info = get_active_window_info()
-    screenshot_dir = os.path.join(data_dir, 'screenshots')
-    os.makedirs(screenshot_dir, exist_ok=True)
-    image_path = os.path.join(screenshot_dir, f"screenshot_{timestamp.strftime('%Y%m%d_%H%M%S')}.png")
-    screenshot.save(image_path)
-    return screenshot, image_path, timestamp, window_info
+    screenshot = None
+    try:
+        screenshot = ImageGrab.grab(all_screens=False)  # Only grab primary screen
+        timestamp = datetime.now()
+        window_info = get_active_window_info()
+        screenshot_dir = os.path.join(data_dir, 'screenshots')
+        os.makedirs(screenshot_dir, exist_ok=True)
+        image_path = os.path.join(screenshot_dir, f"screenshot_{timestamp.strftime('%Y%m%d_%H%M%S')}.png")
+        screenshot.save(image_path)
+        return screenshot, image_path, timestamp, window_info
+    except Exception as e:
+        if screenshot:
+            screenshot.close()
+        raise e
 
 def monitoring_loop(config, timer_menu_item, is_monitoring_ref, data_dir, set_title):
     """Main monitoring loop"""

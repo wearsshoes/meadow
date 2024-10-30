@@ -3,7 +3,6 @@
 import json
 import os
 import base64
-import hashlib
 import pymupdf  # PyMuPDF
 from anthropic import Anthropic, AnthropicError
 
