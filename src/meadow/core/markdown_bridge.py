@@ -1,21 +1,17 @@
 import json
 import os
-import shutil
 from datetime import datetime
-from meadow.core.manicode_wrapper import execute_manicode
 
 class MarkdownBridge:
     """Bridge between Application Support logs and Manicode working directory"""
 
     def __init__(self, notes_dir):
         self.notes_dir = notes_dir
-        self.machine_dir = os.path.join(notes_dir, '_machine')
-        self.temp_logs_dir = os.path.join(self.machine_dir, '_temp_logs')
+        self.lognotes_dir = os.path.join(self.notes_dir, '_machine', '_staging', 'lognotes')
 
     def prepare_workspace(self):
         """Set up the workspace structure"""
-        os.makedirs(self.machine_dir, exist_ok=True)
-        os.makedirs(self.temp_logs_dir, exist_ok=True)
+        os.makedirs(self.lognotes_dir, exist_ok=True)
 
     def convert_logs_to_markdown(self, logs):
         """Convert JSON log entries to markdown files"""
@@ -23,7 +19,7 @@ class MarkdownBridge:
             # Create a markdown file for each log entry
             timestamp = datetime.strptime(log['timestamp'], '%Y-%m-%d %H:%M:%S')
             filename = f"log_{timestamp.strftime('%Y%m%d_%H%M%S')}.knowledge.md"
-            filepath = os.path.join(self.temp_logs_dir, filename)
+            filepath = os.path.join(self.lognotes_dir, filename)
 
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(f"""---
@@ -53,9 +49,6 @@ continuation: {log['continuation']}
 """)
         print(f"Saved converted md to {filepath}.")
 
-    def cleanup(self):
-        """Clean up temporary files after manicode is done"""
-        shutil.rmtree(self.temp_logs_dir)
 
 async def process_analysis_result(analysis_result: dict, notes_dir: str):
     """Process a single analysis result immediately after screenshot analysis"""
@@ -71,10 +64,6 @@ async def process_analysis_result(analysis_result: dict, notes_dir: str):
 
     except OSError as e:
         print(f"Error processing analysis result: {e}")
-
-    finally:
-        # Clean up temporary files
-        bridge.cleanup()
 
 
 async def process_saved_logs(notes_dir: str):
@@ -115,7 +104,3 @@ async def process_saved_logs(notes_dir: str):
 
     except (FileNotFoundError, json.JSONDecodeError, OSError) as e:
         print(f"Error processing saved logs: {e}")
-
-    finally:
-        # Clean up temporary files
-        bridge.cleanup()

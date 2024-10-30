@@ -96,7 +96,7 @@ def analyze_pdf():
         with open(config_path, 'r', encoding='utf-8') as f:
             config = json.load(f)
             notes_dir = config['notes_dir']
-            temp_dir = os.path.join(notes_dir, '_machine', '_temp')
+            pdf_dir = os.path.join(notes_dir, '_machine', '_staging', 'pdf')
 
         data = request.json
         pdf_data = data.get('pdf_data')
@@ -118,8 +118,8 @@ def analyze_pdf():
                 f.write(img_data)
             print(f"[DEBUG] Saved page {page_num} to cache: {cache_filename}")
 
-        # Create _machine/_temp/notes directory if it doesn't exist
-        os.makedirs(temp_dir, exist_ok=True)
+        # Create _machine/_staging/pdf directory if it doesn't exist
+        os.makedirs(pdf_dir, exist_ok=True)
 
         # Generate filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -135,7 +135,7 @@ def analyze_pdf():
 
             suffix = ''.join(random.choices(string.ascii_letters, k=4))
             filename = f"pdf_analysis_{timestamp}{suffix}.md"
-            filepath = os.path.join(temp_dir, filename)
+            filepath = os.path.join(pdf_dir, filename)
 
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(result_with_image)

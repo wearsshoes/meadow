@@ -76,7 +76,7 @@ class MenubarApp(rumps.App):
             "Start Monitoring",
             "Stop Monitoring",
             None,
-            "Analyze Current Screen",
+            "Analyze Current Window",
             None,
             "Open Web Viewer",
             "Open Screenshots Folder",
@@ -118,7 +118,7 @@ class MenubarApp(rumps.App):
     async def generate_source_notes_with_manicode(self):
         """Generate source notes from temp notes in the notes dir"""
         instructions = """
-        1. Read the new markdown files in _machine/_temp_logs
+        1. Read the new markdown files in _machine/_staging/ and subfolders
         2. Update or create topic-specific notes in _machine/ based on the content
         3. Link related concepts using [[wiki-style]] links
         4. Update the knowledge files in _machine/ to reflect new information
@@ -131,9 +131,9 @@ class MenubarApp(rumps.App):
             "notes_dir": self.config['notes_dir']
         }, allow_notes=True)
 
-    @rumps.clicked("Analyze Current Screen")
+    @rumps.clicked("Analyze Current Window")
     def take_screenshot_and_analyze(self, _):
-        """Take and analyze a screenshot of the current screen."""
+        """Take and analyze a screenshot of the current window."""
         self.title = "📸 Analyzing..."
         screenshot, image_path, timestamp, window_info = take_screenshot(self.data_dir)
         log_path = self.get_current_log_path()
