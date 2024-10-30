@@ -1,4 +1,3 @@
-# pylint: disable=import-error
 """Menubar app for screen monitoring using rumps and Quartz"""
 
 import os
@@ -7,10 +6,12 @@ import subprocess
 import json
 import webbrowser
 import asyncio
+from datetime import datetime
 import rumps
 from meadow.core.screenshot_analyzer import analyze_and_log_screenshot
 from meadow.core.monitor import monitoring_loop, take_screenshot
-from meadow.core.source_notes import generate_research_notes
+from meadow.core.markdown_bridge import process_analysis_result, process_saved_logs
+from meadow.core.manicode_wrapper import execute_manicode
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-locals
@@ -49,42 +50,25 @@ class MenubarApp(rumps.App):
         self.cache_dir = os.path.join(self.app_dir, 'cache')
         self.log_dir = os.path.join(self.data_dir, 'logs')
 
-        # Create directory structure
-        os.makedirs(self.config_dir, exist_ok=True)
-        os.makedirs(os.path.join(self.data_dir, 'screenshots'), exist_ok=True)
-        os.makedirs(self.log_dir, exist_ok=True)
-        os.makedirs(os.path.join(self.cache_dir, 'thumbnails'), exist_ok=True)
-
-        # Ensure log file exists and initialize if needed
-        # TODO update path
-        self.log_path = os.path.join(self.log_dir, 'analysis_log.json')
-        if not os.path.exists(self.log_path):
-            with open(self.log_path, 'w', encoding='utf-8') as f:
-                json.dump([], f)
-
-        self.config_path = os.path.join(self.config_dir, 'config.json')
-        default_config = {
-            'notes_dir': os.path.join(os.path.expanduser('~/Documents'), 'Meadow Notes'),
-            'interval': 60,
-            'research_topics': ['civic government']
-        }
-
         # Load configuration from file
+        self.config_path = os.path.join(self.config_dir, 'config.json')
         try:
             with open(self.config_path, 'r', encoding='utf-8') as f:
                 self.config = json.load(f)
-                # Ensure all default keys exist
-                for key, value in default_config.items():
-                    if key not in self.config:
-                        self.config[key] = value
-                self.save_config()
         except FileNotFoundError:
-            self.config = default_config
-            self.save_config()
+            raise RuntimeError("Configuration not found. Please start the web viewer first.")
 
-        self.create_notes_structure(self.config['notes_dir'])
+    def get_current_log_path(self):
+        """Get the path to the current day's log file"""
+        today = datetime.now().strftime('%Y%m%d')
+        log_path = os.path.join(self.log_dir, f'log_{today}.json')
 
-        # Log path is already initialized in Application Support
+        # Initialize log file if it doesn't exist
+        if not os.path.exists(log_path):
+            with open(log_path, 'w', encoding='utf-8') as f:
+                json.dump([], f)
+
+        return log_path
 
     def setup_menu(self):
         """Setup menu items"""
@@ -94,10 +78,11 @@ class MenubarApp(rumps.App):
             None,
             "Analyze Current Screen",
             None,
+            "Open Web Viewer",
             "Open Screenshots Folder",
             "Open Notes Folder",
-            "Open Web Viewer",
-            "Generate Research Notes",
+            "Process Missing Logs",
+            "Generate Source Notes",
             "Settings",
             None,
         ]
@@ -120,48 +105,60 @@ class MenubarApp(rumps.App):
         except (FileNotFoundError, json.JSONDecodeError):
             pass
 
-    def log_analysis(self, image_path, description, timestamp, window_info):
-        """Log analysis results to JSON file"""
-        # TODO update path
-        log_path = os.path.join(self.data_dir, 'logs', 'analysis_log.json')
-
-        entry = {
-            'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-            'image_path': image_path,
-            'app': window_info['app'],
-            'window': window_info['title'],
-            'description': description,
-        }
-
-        try:
-            with open(log_path, 'r', encoding='utf-8') as f:
-                logs = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            logs = []
-
-        logs.append(entry)
-
-        with open(log_path, 'w', encoding='utf-8') as f:
-            json.dump(logs, f, indent=2)
-
     def monitoring_loop(self):
         """Main monitoring loop"""
         monitoring_loop(self.config, self.timer_menu_item, lambda: self.is_monitoring, self.data_dir,
                        lambda title: setattr(self, 'title', title))
+
+    def process_screenshot_analysis(self, analysis_result):
+        """Process screenshot analysis result immediately"""
+        if analysis_result and analysis_result.get('research_summary'):
+            asyncio.run(process_analysis_result(analysis_result, self.config['notes_dir']))
+
+    async def generate_source_notes_with_manicode(self):
+        """Generate source notes from temp notes in the notes dir"""
+        instructions = """
+        1. Read the new markdown files in _machine/_temp_logs
+        2. Update or create topic-specific notes in _machine/ based on the content
+        3. Link related concepts using [[wiki-style]] links
+        4. Update the knowledge files in _machine/ to reflect new information
+        5. Clean up and organize notes in _machine/ as needed
+        """
+
+        # Execute manicode with the workspace
+        await execute_manicode(instructions, {
+            "cwd": self.config['notes_dir'],
+            "notes_dir": self.config['notes_dir']
+        }, allow_notes=True)
 
     @rumps.clicked("Analyze Current Screen")
     def take_screenshot_and_analyze(self, _):
         """Take and analyze a screenshot of the current screen."""
         self.title = "📸 Analyzing..."
         screenshot, image_path, timestamp, window_info = take_screenshot(self.data_dir)
-        # TODO update path
-        log_path = os.path.join(self.data_dir, 'logs', 'analysis_log.json')
+        log_path = self.get_current_log_path()
 
         def analyze_and_restore():
-            analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, log_path)
+            analysis_result = analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, log_path)
+            if analysis_result:
+                self.process_screenshot_analysis(analysis_result)
             self.title = "📸"
 
         threading.Thread(target=analyze_and_restore).start()
+
+    @rumps.clicked("Generate Source Notes")
+    def handle_generate_source_notes(self, _):
+        """Generate source notes from the temp notes."""
+        self.title = "📝 Generating..."
+
+        async def generate():
+            try:
+                await self.generate_source_notes_with_manicode()
+                subprocess.run(['open', self.config['notes_dir']], check=True)
+            finally:
+                self.title = "📸"
+
+        threading.Thread(target=lambda: asyncio.run(generate())).start()
 
     @rumps.clicked("Start Monitoring")
     def start_monitoring(self, _):
@@ -202,14 +199,11 @@ class MenubarApp(rumps.App):
         """Open the web viewer in default browser."""
         webbrowser.open('http://localhost:5050')
 
-    @rumps.clicked("Generate Research Notes")
-    def generate_notes(self, _):
-        """Generate Obsidian-style research notes from logs."""
-        self.title = "📝"
-
-        async def generate():
-            await generate_research_notes(self.config['notes_dir'])
-            self.title = "📸"
+    @rumps.clicked("Process Missing Logs")
+    def handle_process_missing_logs(self, _):
+        """Process any saved unprocessed logs."""
+        async def process():
+            await process_saved_logs(self.config['notes_dir'])
             subprocess.run(['open', self.config['notes_dir']], check=True)
 
-        threading.Thread(target=lambda: asyncio.run(generate())).start()
+        threading.Thread(target=lambda: asyncio.run(process())).start()

@@ -1,5 +1,4 @@
 # pylint: disable=no-name-in-module
-# pylint: disable=import-error
 """Module for screen monitoring and screenshot capture"""
 
 import os
@@ -68,8 +67,8 @@ def monitoring_loop(config, timer_menu_item, is_monitoring_ref, data_dir, set_ti
                 time.sleep(1)
                 continue
             screenshot, image_path, timestamp, window_info = take_screenshot(config['screenshot_dir'])
-            # TODO update path
-            log_path = os.path.join(data_dir, 'logs', 'analysis_log.json')
+            today = datetime.now().strftime('%Y%m%d')
+            log_path = os.path.join(data_dir, 'logs', f'log_{today}.json')
             threading.Thread(target=analyze_and_log_screenshot, args=(screenshot, image_path, timestamp, window_info, log_path)).start()
             next_screenshot = time.time() + config['interval']
             last_window_info = current_window

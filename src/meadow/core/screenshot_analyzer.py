@@ -1,4 +1,3 @@
-
 """Module for analyzing screenshots using Claude API"""
 
 import base64
@@ -100,7 +99,7 @@ Analyze the screenshot and return your response in XML format with the following
                 match = re.search(f'<{tag}>(.*?)</{tag}>', text, re.DOTALL)
                 if not match:
                     return None
-                return match.group(1).replace('&lt;', '<').replace('&gt;', '>').replace('&amp;', '&').strip()
+                return match.group(1).replace('<', '<').replace('>', '>').replace('&amp;', '&').strip()
 
             action = extract_tag('action', response) or "Error parsing response"
             topic = extract_tag('topic', response)
@@ -120,11 +119,12 @@ Analyze the screenshot and return your response in XML format with the following
             'research_summary': summary,
             'ocr_text': ocr_text,
             'continuation': continuation,
+            'processed': False
         }
 
         # Skip if no research content
         if summary is None:
-            return
+            return None
 
         # Use dated log file
         log_dir = os.path.dirname(log_path)
@@ -141,30 +141,8 @@ Analyze the screenshot and return your response in XML format with the following
         with open(dated_log, 'w', encoding='utf-8') as f:
             json.dump(logs, f, indent=2)
 
+        return entry
+
     except (AnthropicError, IOError, ValueError) as e:
         print(f"Error in analyze_image: {str(e)}")
-
-# class LogEntry:
-#     """Container for analysis log entry"""
-#     def __init__(self, timestamp, image_path, window_info, action, topic, summary=None, ocr_text=None, claude_prompt=None, claude_response=None, continuation=False):
-#         # Skip if no research content
-#         if topic == 'none' or not summary:
-#             self.data = None
-#             return
-
-#         self.data = {
-#             'timestamp': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-#             'image_path': image_path,
-#             'app': window_info['app'],
-#             'window': window_info['title'],
-#             'description': action,
-#             'research_topic': topic,
-#             'research_summary': summary,
-#             'ocr_text': ocr_text,
-#             'claude_prompt': claude_prompt,
-#             'claude_response': claude_response,
-#             'continuation': continuation,
-#             'processed': False
-#         }
-
-
+        return None

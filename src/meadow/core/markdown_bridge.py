@@ -4,7 +4,7 @@ import shutil
 from datetime import datetime
 from meadow.core.manicode_wrapper import execute_manicode
 
-class ManicodeBridge:
+class MarkdownBridge:
     """Bridge between Application Support logs and Manicode working directory"""
 
     def __init__(self, notes_dir):
@@ -56,22 +56,40 @@ continuation: {log['continuation']}
         """Clean up temporary files after manicode is done"""
         shutil.rmtree(self.temp_logs_dir)
 
-async def generate_research_notes(notes_dir: str):
-    """Generate Obsidian-style research notes from analysis logs"""
-    # Get log from Application Support
-    app_support_dir = os.path.expanduser('~/Library/Application Support/Meadow')
-    # TODO update path
-    log_path = os.path.join(app_support_dir, 'data', 'logs', 'analysis_log.json')
-
+def process_analysis_result(analysis_result: dict, notes_dir: str):
+    """Process a single analysis result immediately after screenshot analysis"""
     try:
-        print("\n[DEBUG] Starting research note generation...")
+        print("\n[DEBUG] Processing single analysis result...")
 
         # Initialize bridge
-        bridge = ManicodeBridge(notes_dir)
+        bridge = MarkdownBridge(notes_dir)
+        bridge.prepare_workspace()
+
+        # Convert single result to markdown
+        bridge.convert_logs_to_markdown([analysis_result])
+
+    except OSError as e:
+        print(f"Error processing analysis result: {e}")
+
+    finally:
+        # Clean up temporary files
+        bridge.cleanup()
+
+
+async def process_saved_logs(notes_dir: str):
+    """Process saved unprocessed logs from Application Support"""
+    # Get logs from Application Support
+    app_support_dir = os.path.expanduser('~/Library/Application Support/Meadow')
+    log_dir = os.path.join(app_support_dir, 'data', 'logs')
+
+    try:
+        print("\n[DEBUG] Processing saved logs...")
+
+        # Initialize bridge
+        bridge = MarkdownBridge(notes_dir)
         bridge.prepare_workspace()
 
         # Get all unprocessed logs from dated files
-        log_dir = os.path.dirname(log_path)
         unprocessed_logs = []
 
         for filename in os.listdir(log_dir):
@@ -93,22 +111,9 @@ async def generate_research_notes(notes_dir: str):
 
         bridge.convert_logs_to_markdown(unprocessed_logs)
 
-        # Set up manicode instructions to read from _temp_logs
-        instructions = """
-        1. Read the markdown files in _machine/_temp_logs to understand recent activity
-        2. Update or create topic-specific notes in _machine/ based on the content
-        3. Link related concepts using [[wiki-style]] links
-        4. Update the knowledge files to reflect new information
-        5. Clean up and organize notes as needed
-        """
-
-        # Execute manicode with the workspace
-        await execute_manicode(instructions, {
-            "cwd": notes_dir
-        }, allow_notes=True)
 
     except (FileNotFoundError, json.JSONDecodeError, OSError) as e:
-        print(f"Error generating notes: {e}")
+        print(f"Error processing saved logs: {e}")
 
     finally:
         # Clean up temporary files

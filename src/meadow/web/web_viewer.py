@@ -9,6 +9,7 @@ import json
 import string
 from datetime import datetime
 import base64
+import hashlib
 import keyring
 from PIL import Image
 from flask import Flask, render_template_string, request, jsonify
@@ -56,6 +57,12 @@ def get_thumbnail_base64(image_path):
         print(f"Error creating thumbnail for {image_path}: {e}")
         return ""
 
+def get_pdf_cache_dir():
+    """Get and ensure PDF pages cache directory exists"""
+    cache_dir = os.path.expanduser('~/Library/Application Support/Meadow/cache/pdf_pages')
+    os.makedirs(cache_dir, exist_ok=True)
+    return cache_dir
+
 @app.route('/open_in_finder')
 def open_in_finder():
     """Open the log file location in Finder"""
@@ -97,7 +104,20 @@ def analyze_pdf():
         if not pdf_data:
             return jsonify({'error': 'No PDF data provided'}), 400
 
-        markdown_results = pdf_analyzer.analyze_pdf(pdf_data)
+        # Generate PDF hash for caching
+        pdf_hash = hashlib.sha256(base64.b64decode(pdf_data)).hexdigest()[:12]
+
+        # Get analysis results and page images
+        markdown_results, page_images = pdf_analyzer.analyze_pdf(pdf_data)
+
+        # Save page images to cache
+        cache_dir = get_pdf_cache_dir()
+        for page_num, img_data in enumerate(page_images, 1):
+            cache_filename = f"{pdf_hash}_page_{page_num}.png"
+            cache_path = os.path.join(cache_dir, cache_filename)
+            with open(cache_path, 'wb') as f:
+                f.write(img_data)
+            print(f"[DEBUG] Saved page {page_num} to cache: {cache_filename}")
 
         # Create _machine/_temp/notes directory if it doesn't exist
         os.makedirs(temp_dir, exist_ok=True)
@@ -105,18 +125,27 @@ def analyze_pdf():
         # Generate filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        # Save markdown content to file
-        for result in markdown_results:
+        # Save markdown content to file with image links
+        for i, result in enumerate(markdown_results):
+            page_num = i + 1
+            cache_filename = f"{pdf_hash}_page_{page_num}.png"
+            cache_path = os.path.join(cache_dir, cache_filename)
+
+            # Add image link at the end of the analysis
+            result_with_image = f"{result}\n\n![Page {page_num}]({cache_path})\n"
+
             suffix = ''.join(random.choices(string.ascii_letters, k=4))
             filename = f"pdf_analysis_{timestamp}{suffix}.md"
             filepath = os.path.join(temp_dir, filename)
 
             with open(filepath, 'w', encoding='utf-8') as f:
-                f.write(result)
+                f.write(result_with_image)
 
             print(f"[DEBUG] Saved analysis to {filepath}")
 
-        return jsonify({'result': {'markdown': ''.join(markdown_results)}})
+        # Join results with image links for the response
+        markdown_with_images = ''.join(markdown_results)
+        return jsonify({'result': {'markdown': markdown_with_images}})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -228,9 +257,42 @@ def shutdown_viewer():
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
 
+def initialize_config():
+    """Initialize application configuration"""
+    app_dir = os.path.expanduser('~/Library/Application Support/Meadow')
+    config_dir = os.path.join(app_dir, 'config')
+    os.makedirs(config_dir, exist_ok=True)
+
+    config_path = os.path.join(config_dir, 'config.json')
+    default_config = {
+        'notes_dir': os.path.join(os.path.expanduser('~/Documents'), 'Meadow Notes'),
+        'interval': 60,
+        'research_topics': ['civic government']
+    }
+
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+            # Ensure all default keys exist
+            for key, value in default_config.items():
+                if key not in config:
+                    config[key] = value
+    except (FileNotFoundError, json.JSONDecodeError):
+        config = default_config
+
+    with open(config_path, 'w', encoding='utf-8') as f:
+        json.dump(config, f)
+
+    # Create notes directory structure
+    notes_dir = config['notes_dir']
+    os.makedirs(notes_dir, exist_ok=True)
+    os.makedirs(os.path.join(notes_dir, '_machine'), exist_ok=True)
+    os.makedirs(os.path.join(notes_dir, 'research'), exist_ok=True)
+
 def start_viewer():
     """Start the Flask server"""
     print("[DEBUG] Starting web viewer...")
+    initialize_config()
     app.run(port=5050, debug=False, use_reloader=False)
 
 if __name__ == '__main__':

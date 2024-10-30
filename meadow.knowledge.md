@@ -12,8 +12,10 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 ### Core
 - monitor.py
   - runs the monitoring loop and saves logs
-- analyzer.py
-  - contains the core logic and api calls
+- screenshot_analyzer.py
+  - analyzes screenshots and extracts text
+- pdf_analyzer.py
+  - analyzes PDFs and extracts content
 - manicode_wrapper.py
   - used to create notes from analysis
 
@@ -21,9 +23,12 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
 - menubar_app.py: UI and coordination
   - monitor continuously or analyze current screen
   - open web viewer
+  - read-only access to configuration
 
 ### Web
-- web_viewer.py: settings and logs
+- web_viewer.py: settings and configuration management
+  - Handles all config file modifications
+  - Provides config API for menubar app
   - / (main page)
     - View details from captured logs
     - Show thumbnails and analysis results
@@ -73,6 +78,13 @@ Notes folder (Location set by user):
 
 ## Core Design Principles
 
+### Architecture Patterns
+- Separate UI concerns from configuration management
+  - Web interface handles all config modifications
+  - Menubar app has read-only access to config
+  - Prevents race conditions between interfaces
+  - Makes config changes traceable through web UI
+
 - Research topic handling:
   - Source research topics from user config, not window context
   - Use configured topics to guide Claude analysis
@@ -121,17 +133,20 @@ Notes folder (Location set by user):
 
 ## Logging Patterns
 - Store complete context with each log entry:
-  - Raw inputs (screenshots, window info)
+  - Raw inputs (screenshots, PDFs, window info)
   - Processing steps (OCR text, prompts) 
   - Analysis results (summaries, topics)
   - Continuation status
-- Initialize empty log files with valid JSON ([])
-- Use dated log files (log_YYYYMMDD.json) for better organization
+- Log files are split by date:
+  - Format: log_YYYYMMDD.json in logs directory
+  - Each day starts with empty JSON array ([])
+  - Web viewer uses date picker for navigation
+  - Old entries marked as processed=true
+- No single analysis_log.json file - all logs are date-based
 - Handle optional fields defensively:
   - research_topic may be missing/none for non-research content
   - summary may be empty for non-relevant content
   - continuation may be unknown for first entries
-- Log files should be read from Application Support, not notes directory
 
 ## Initialization Patterns
 - Create all required directories on startup before any operations

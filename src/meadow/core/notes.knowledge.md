@@ -39,10 +39,12 @@ This folder is for AI-generated notes created from knowledge captured by screens
 Higher-level knowledge about research activity should be stored in machine_notes.knowledge.md and frequently updated.
 
 Source notes:
-- A note should be generated for each document, chat, website, or other source.
-- Notes which come from the same source and share the same topic should be merged.
+- A note should be generated for each document, chat, website, or other source
+- Notes which come from the same source and share the same topic should be merged
 - Notes are organized hierarchically in folders as app/window_title/subject.md
   - Example: Preview/SanMateoBudgetPDF/fiscal_summary.md
+- PDF sources are analyzed and split into logical sections
+- Screenshots are analyzed with OCR and window context
 
 - Each note requires metadata frontmatter:
 ```yaml
@@ -112,6 +114,7 @@ Privacy Handling
 
 Cleanup and Backups
 - Mark the now-processed JSON logs for archiving by setting "processed" to True
+- Logs are automatically split by date for better organization
 - `git commit` frequently to avoid data disasters!
 
 ## Writing Guidelines
