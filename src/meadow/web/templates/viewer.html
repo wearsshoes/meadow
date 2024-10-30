@@ -3,14 +3,14 @@
 <div class="container">
     <h1>Research Log</h1>
     <div class="header-actions">
-        <select onchange="window.location.href='/?date=' + this.value">
+        <select onchange="window.location.href='/logs?date=' + this.value">
             {% for date in dates %}
             <option value="{{ date }}" {% if date == selected_date %}selected{% endif %}>
                 {{ date[:4] }}-{{ date[4:6] }}-{{ date[6:] }}
             </option>
             {% endfor %}
         </select>
-        <button onclick="window.location.href='open_in_finder'" class="action-button">Open in Finder</button>
+        <button onclick="window.location.href='/open_in_finder'" class="action-button">Open in Finder</button>
     </div>
     <div class="entries">
         {% for entry in entries %}
@@ -18,10 +18,10 @@
             <img loading="lazy" src="data:image/png;base64,{{ entry.thumbnail }}" alt="Screenshot" class="entry-image">
             <div class="entry-content">
                 <div class="entry-metadata">
-                    <span class="timestamp">{{ entry.timestamp }}</span>
-                    <span class="app"> | {{ entry.app }}</span>
+                    <span class="timestamp">{{ entry.timestamp or '' }}</span>
+                    <span class="app">{% if entry.app %} | {{ entry.app }}{% endif %}</span>
                     <span class="continuation">
-                        {% if entry.continuation %}
+                        {% if entry.continuation is defined %}
                             | {{ 'Continued action' if entry.continuation == 'true' else 'New action' }}
                         {% endif %}
                     </span>

@@ -12,11 +12,13 @@ import base64
 import hashlib
 import keyring
 from PIL import Image
-from flask import Flask, render_template_string, request, jsonify
+from flask import Flask, render_template_string, request, jsonify, redirect, render_template
 from meadow.ui.menubar_app import MenubarApp
 from meadow.core.pdf_analyzer import PDFAnalyzer
 
-app = Flask(__name__)
+app = Flask(__name__,
+           template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
+           static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 pdf_analyzer = PDFAnalyzer()
 
 # Cache for thumbnails
@@ -73,11 +75,8 @@ def open_in_finder():
 
 @app.route('/')
 def index():
-    """Render the main page with navigation"""
-    template_path = os.path.join(os.path.dirname(__file__), 'templates', 'base.html')
-    with open(template_path, 'r', encoding='utf-8') as f:
-        template_content = f.read()
-    return render_template_string(template_content)
+    """Redirect to logs view"""
+    return redirect('/logs')
 
 @app.route('/pdf')
 def pdf_upload():
@@ -159,8 +158,14 @@ def view_logs():
     app_dir = os.path.expanduser('~/Library/Application Support/Meadow')
     log_dir = os.path.join(app_dir, 'data', 'logs')
 
-    # Get selected date from query params, default to today
-    selected_date = request.args.get('date', datetime.now().strftime('%Y%m%d'))
+    # Get selected date from query params, default to most recent date
+    dates = []
+    for filename in os.listdir(log_dir):
+        if filename.startswith('log_') and filename.endswith('.json'):
+            date = filename[4:12]  # Extract YYYYMMDD from filename
+            dates.append(date)
+    dates.sort(reverse=True)
+    selected_date = request.args.get('date', dates[0] if dates else datetime.now().strftime('%Y%m%d'))
 
     # Get list of available dates
     dates = []
@@ -175,7 +180,12 @@ def view_logs():
     try:
         with open(log_path, 'r', encoding='utf-8') as f:
             entries = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
+            print(f"[DEBUG] Loaded {len(entries)} entries from {log_path}")
+    except FileNotFoundError:
+        print(f"[DEBUG] Log file not found: {log_path}")
+        entries = []
+    except json.JSONDecodeError as e:
+        print(f"[DEBUG] Error decoding log file {log_path}: {e}")
         entries = []
 
     # Add thumbnails to entries
@@ -186,11 +196,10 @@ def view_logs():
     entries.sort(key=lambda x: x['timestamp'], reverse=True)
     entries = entries[:20]  # Only show most recent 20 entries initially
 
-    # Read the template file
-    template_path = os.path.join(os.path.dirname(__file__), 'templates', 'viewer.html')
-    with open(template_path, 'r', encoding='utf-8') as f:
-        template_content = f.read()
-    return render_template_string(template_content, entries=entries, dates=dates, selected_date=selected_date)
+    return render_template('viewer.html',
+                           entries=entries,
+                           dates=dates,
+                           selected_date=selected_date)
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():

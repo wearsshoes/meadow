@@ -147,6 +147,13 @@ Notes folder (Location set by user):
   - research_topic may be missing/none for non-research content
   - summary may be empty for non-relevant content
   - continuation may be unknown for first entries
+- Log file handling:
+  - All logs stored in ~/Library/Application Support/Meadow/data/logs/
+  - Naming format: log_YYYYMMDD.json (e.g. log_20241028.json)
+  - Web viewer reads from log directory based on selected date
+  - Both menubar app and web viewer must use get_current_log_path() pattern
+  - Always initialize new log files with empty array ([])
+  - When reading logs, check for both current and previous dates
 
 ## Initialization Patterns
 - Create all required directories on startup before any operations
@@ -167,6 +174,11 @@ Notes folder (Location set by user):
   - Left-aligned thumbnails
   - Collapsible details
   - Clear visual hierarchy
+- Date-based log navigation:
+  - Default to most recent log file date, not current date
+  - Dropdown shows all available log dates
+  - URL parameter ?date=YYYYMMDD controls displayed logs
+  - Handle missing dates gracefully with empty state
 
 ### Log Viewer Management
 - Store all logs in Application Support directory
