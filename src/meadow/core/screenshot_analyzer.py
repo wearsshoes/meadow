@@ -8,8 +8,10 @@ import queue
 import threading
 
 import Vision
-import easyocr
 from anthropic import Anthropic, AnthropicError
+
+# Lazy load easyocr only when needed
+easyocr = None
 
 class OCRProcessor:
     """Handles OCR processing with fallback options"""
@@ -22,6 +24,9 @@ class OCRProcessor:
         """Get or initialize the OCR reader singleton"""
         with self._ocr_lock:
             if self._ocr_reader is None:
+                global easyocr
+                if easyocr is None:
+                    import easyocr
                 self._ocr_reader = easyocr.Reader(['en'])
         return self._ocr_reader
 
@@ -33,12 +38,10 @@ class OCRProcessor:
             image_path: Path to saved PNG for EasyOCR fallback
         """
         try:
-            raise Exception("Test")
             print("[DEBUG] Using Vision OCR")
             return self._get_vision_text(cg_image)
         except Exception as e:
             print(f"[DEBUG] Vision OCR failed, falling back to EasyOCR: {e}")
-            print("[DEBUG] Using EasyOCR")
             return self._get_easyocr_text(image_path)
 
     def _get_vision_text(self, cg_image):

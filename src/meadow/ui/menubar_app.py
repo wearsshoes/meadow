@@ -11,6 +11,7 @@ import rumps
 from meadow.core.screenshot_analyzer import analyze_and_log_screenshot
 from meadow.core.monitor import monitoring_loop, take_screenshot
 from meadow.core.markdown_bridge import process_analysis_result, process_saved_logs
+from meadow.core.config import Config
 from meadow.core.manicode_wrapper import execute_manicode
 
 # pylint: disable=too-many-instance-attributes
@@ -36,8 +37,8 @@ class MenubarApp(rumps.App):
         self.is_monitoring = False
         self.next_screenshot = None
         self.last_window_info = None
-        # Check config changes every 5 seconds
-        rumps.Timer(self.check_config_changes, 5).start()
+        # Check config changes every 1 second
+        rumps.Timer(self.check_config_changes, 1).start()
 
     def create_notes_structure(self, notes_dir):
         """Create the standard notes directory structure"""
@@ -48,20 +49,12 @@ class MenubarApp(rumps.App):
     def setup_config(self):
         """Initialize configuration settings"""
         print("[DEBUG] Setting up configuration...")
-        # Set up application directories
-        self.app_dir = os.path.expanduser('~/Library/Application Support/Meadow')
-        self.config_dir = os.path.join(self.app_dir, 'config')
+        config = Config()
+        self.config = config.get_all()  # Get copy of full config
+        self.app_dir = config.app_dir
         self.data_dir = os.path.join(self.app_dir, 'data')
         self.cache_dir = os.path.join(self.app_dir, 'cache')
         self.log_dir = os.path.join(self.data_dir, 'logs')
-
-        # Load configuration from file
-        self.config_path = os.path.join(self.config_dir, 'config.json')
-        try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                self.config = json.load(f)
-        except FileNotFoundError:
-            raise RuntimeError("Configuration not found. Please start the web viewer first.")
 
     def get_current_log_path(self):
         """Get the path to the current day's log file"""
@@ -94,17 +87,19 @@ class MenubarApp(rumps.App):
 
     def save_config(self):
         """Save current configuration to file"""
-        with open(self.config_path, 'w', encoding='utf-8') as f:
-            json.dump(self.config, f)
+        Config().update(self.config)
 
     def check_config_changes(self, _):
         """Check for config changes and reload if needed"""
         try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                new_config = json.load(f)
-                if new_config != self.config:
-                    self.config = new_config
-                    if self.is_monitoring:
+            config = Config()
+            new_config = config.get_all()
+            if new_config != self.config:
+                old_config = self.config
+                self.config = new_config
+                if self.is_monitoring:
+                    # Only restart monitoring if interval changed
+                    if old_config.get('interval') != new_config.get('interval'):
                         self.stop_monitoring(None)
                         self.start_monitoring(None)
         except (FileNotFoundError, json.JSONDecodeError):
@@ -112,7 +107,8 @@ class MenubarApp(rumps.App):
 
     def monitoring_loop(self):
         """Main monitoring loop"""
-        monitoring_loop(self.config, self.timer_menu_item, lambda: self.is_monitoring, self.data_dir,
+        # Pass function to get fresh config
+        monitoring_loop(lambda: Config().get_all(), self.timer_menu_item, lambda: self.is_monitoring, self.data_dir,
                        lambda title: setattr(self, 'title', title))
 
     def process_screenshot_analysis(self, analysis_result):
@@ -169,6 +165,8 @@ class MenubarApp(rumps.App):
     def start_monitoring(self, _):
         """Start periodic screenshot monitoring."""
         if not self.is_monitoring:
+            # Get fresh config before starting
+            self.config = Config().get_all()
             self.is_monitoring = True
             self.title = "👁️"  # Active monitoring icon
             threading.Thread(target=self.monitoring_loop).start()
@@ -176,6 +174,7 @@ class MenubarApp(rumps.App):
     @rumps.clicked("Stop Monitoring")
     def stop_monitoring(self, _):
         """Stop periodic screenshot monitoring."""
+
         self.is_monitoring = False
         self.title = "📸"  # Default icon when not monitoring
 

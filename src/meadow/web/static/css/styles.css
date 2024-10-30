@@ -241,6 +241,12 @@ th.desc::after {
     box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.2);
 }
 
+.help-text {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
 .save-notification {
     position: fixed;
     bottom: 20px;

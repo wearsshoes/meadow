@@ -93,8 +93,10 @@ def take_screenshot(data_dir):
     CGImageDestinationFinalize(destination)
     return screenshot, temp_path, timestamp, window_info
 
-def monitoring_loop(config, timer_menu_item, is_monitoring_ref, data_dir, set_title):
+def monitoring_loop(get_config, timer_menu_item, is_monitoring_ref, data_dir, set_title):
     """Main monitoring loop"""
+    config = get_config()
+    print(f"[DEBUG] Starting monitoring loop with interval: {config['interval']}")
     next_screenshot = time.time() + config['interval']
     last_window_info = get_active_window_info()
 
@@ -110,6 +112,7 @@ def monitoring_loop(config, timer_menu_item, is_monitoring_ref, data_dir, set_ti
                 time.sleep(1)
                 continue
             print(f"[DEBUG] Taking screenshot at {datetime.now().strftime('%H:%M:%S')}")
+            config = get_config()  # Get fresh config for screenshot
             screenshot, image_path, timestamp, window_info = take_screenshot(config['screenshot_dir'])
             print(f"[DEBUG] Screenshot saved to {image_path}")
             today = datetime.now().strftime('%Y%m%d')
@@ -120,4 +123,5 @@ def monitoring_loop(config, timer_menu_item, is_monitoring_ref, data_dir, set_ti
 
         time.sleep(1)
 
-    timer_menu_item.title = "Next capture: --"
+    if timer_menu_item:
+        timer_menu_item.title = "Next capture: --"

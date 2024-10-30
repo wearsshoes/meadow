@@ -109,6 +109,258 @@ Notes folder (Location set by user):
   - Prevents race conditions between interfaces
   - Makes config changes traceable through web UI
 
+### Code Quality Standards
+
+- Performance Standards:
+  - Keep startup time under 1 second
+  - Lazy load expensive resources
+  - Initialize singletons only when first accessed
+  - Defer file operations until needed
+  - Profile startup path regularly
+
+- Linting:
+  - Run pylint before committing changes
+  - Maintain 8.0+ pylint score
+  - Use type hints for all function parameters
+  - Follow Google Python Style Guide
+  - Disable specific pylint warnings with inline comments only when necessary
+
+- Error Handling:
+  - Log all exceptions with context
+  - Provide user-friendly error messages
+  - Use custom exceptions for domain-specific errors
+  - Handle all file operations with appropriate try/except
+  - Never suppress KeyboardInterrupt or SystemExit
+
+### Configuration Management Patterns
+
+- Config Change Handling:
+  - Web viewer owns all config modifications
+  - Config changes affect next app start
+  - Clear menu item references during cleanup
+  - Handle quick start/stop cycles gracefully
+  - Example: "Changes will take effect after restarting the app"
+
+- Race condition prevention:
+  - Web viewer validates before saving
+  - Menubar app reloads on timer
+  - Use atomic writes for config updates
+  - Watch for external config changes
+
+- Performance patterns:
+  - Lazy initialize Config singleton on first access
+  - Cache file paths but not content
+  - Load config file only when values needed
+  - Use atomic file operations for updates
+  - Keep config operations off startup path
+
+- Implementation patterns:
+  - Never access protected members (e.g. Config._config) directly
+  - Use public methods: get(), set(), get_all()
+  - Create new public methods for complex operations
+  - Avoid storing mutable config references
+  - Reload config when needed instead of caching
+  - Example: "Changes will take effect after restarting the app"
+
+- Config Change Propagation:
+  - Web viewer owns all config modifications
+  - Config changes affect next app start
+  - Clear menu item references during cleanup
+  - Handle quick start/stop cycles gracefully
+  - When comparing configs, use get_all() vs get_all()
+  - In templates, use config.get_all() instead of passing Config instance
+  - Templates expect dictionary interface, not Config object
+
+- Race condition prevention:
+  - Web viewer validates before saving
+  - Menubar app reloads on timer
+  - Use atomic writes for config updates
+  - Watch for external config changes
+
+- Performance patterns:
+  - Lazy initialize Config singleton on first access
+  - Cache file paths but not content
+  - Load config file only when values needed
+  - Use atomic file operations for updates
+  - Keep config operations off startup path
+
+- Implementation patterns:
+  - Never access protected members (e.g. Config._config) directly
+  - Use public methods: get(), set(), get_all()
+  - Create new public methods for complex operations
+  - Avoid storing mutable config references
+  - Reload config when needed instead of caching
+  - When comparing configs, use get_all() vs get_all()
+  - In templates, use config.get_all() instead of passing Config instance
+  - Templates expect dictionary interface, not Config object
+
+- Race condition prevention:
+  - Web viewer validates before saving
+  - Menubar app reloads on timer
+  - Use atomic writes for config updates
+  - Watch for external config changes
+
+- Performance patterns:
+  - Lazy initialize Config singleton on first access
+  - Cache file paths but not content
+  - Load config file only when values needed
+  - Use atomic file operations for updates
+  - Keep config operations off startup path
+
+- Implementation patterns:
+  - Never access protected members (e.g. Config._config) directly
+  - Use public methods: get(), set(), get_all()
+  - Create new public methods for complex operations
+  - Avoid storing mutable config references
+  - Reload config when needed instead of caching
+  - When comparing configs, use get_all() vs get_all()
+  - In templates, use config.get_all() instead of passing Config instance
+  - Templates expect dictionary interface, not Config object
+
+- Menubar Lifecycle Management
+  - Initialize all menu items in setup_menu() before use
+  - Never assume menu items exist after stopping monitoring
+  - Clear references to menu items during cleanup
+  - Handle quick start/stop cycles gracefully
+  - Check menu item existence before access
+  - Example error case: timer_menu_item.title access after monitoring stops
+
+### Debug Logging
+- Log all state transitions:
+  - Start/stop of key operations (monitoring, analysis)
+  - Before/after values for config changes
+  - Entry/exit of long-running operations
+  - Failures and fallback behavior
+  - Config changes with old/new values
+  - Monitoring lifecycle events (start, stop, interval changes)
+  - Settings changes with new values
+- Include timing information where relevant
+- Use consistent format: "[DEBUG] Operation: detail"
+- Log both old and new values for config changes
+- Log complete lifecycle of features (start, stop, pause)
+- Debug logging patterns:
+  - Config changes: "[DEBUG] Config changed - old interval: X, new interval: Y"
+  - Settings updates: "[DEBUG] Settings: changing interval to X"
+  - Monitoring lifecycle: "[DEBUG] Starting monitoring loop with interval: X"
+  - Monitoring state: "[DEBUG] Stopping monitoring"
+  - When comparing configs, use get_all() vs get_all()
+  - In templates, use config.get_all() instead of passing Config instance
+  - Templates expect dictionary interface, not Config object
+
+- Race condition prevention:
+  - Web viewer validates before saving
+  - Menubar app reloads on timer
+  - Use atomic writes for config updates
+  - Watch for external config changes
+
+- Performance patterns:
+  - Lazy initialize Config singleton on first access
+  - Cache file paths but not content
+  - Load config file only when values needed
+  - Use atomic file operations for updates
+  - Keep config operations off startup path
+
+- Implementation patterns:
+  - Never access protected members (e.g. Config._config) directly
+  - Use public methods: get(), set(), get_all()
+  - Create new public methods for complex operations
+  - Avoid storing mutable config references
+  - Reload config when needed instead of caching
+
+- Performance patterns:
+  - Lazy initialize Config singleton on first access
+  - Cache file paths but not content
+  - Load config file only when values needed
+  - Use atomic file operations for updates
+  - Keep config operations off startup path
+
+- Implementation patterns:
+  - Never access protected members (e.g. Config._config) directly
+  - Use public methods: get(), set(), get_all()
+  - Create new public methods for complex operations
+  - Avoid storing mutable config references
+  - Reload config when needed instead of caching
+  - When comparing configs, use get_all() vs get_all()
+  - In templates, use config.get_all() instead of passing Config instance
+  - Templates expect dictionary interface, not Config object
+
+- Singleton implementation:
+  - Initialize all attributes in __init__, not __new__
+  - Use hasattr check to prevent double initialization
+  - Example:
+    ```python
+    def __init__(self):
+        if not hasattr(self, 'initialized'):
+            self.config_dir = '...'
+            self.initialized = True
+    ```
+  - Never access instance attributes in __new__
+  - Keep __new__ minimal, just instance creation
+  - Do all setup work in __init__
+
+- Template Integration:
+  - Pass config.get_all() to templates, never Config instance
+  - Example: render_template('view.html', config=config.get_all())
+  - Access in template: {{ config.notes_dir }}
+  - Maintain dictionary-like interface for template compatibility
+
+- Config file location:
+  - Store in ~/Library/Application Support/Meadow/config/config.json
+  - Never cache path, always derive from app_dir
+  - Use get_config_path() helper to ensure consistency
+
+- Config access patterns:
+  - Web viewer owns all config modifications
+  - Menubar app only reads config
+  - Both reload config file on each access
+  - Use file watchers for live updates
+  - Never modify config.json directly
+  - Update UI elements when config changes:
+    - Check timer_menu_item exists before updating
+    - Update menubar display immediately on interval change
+    - Restart monitoring if interval changes during active monitoring
+    - Clear menu item references during cleanup
+
+- Config validation:
+  - Validate all fields when loading
+  - Provide defaults for missing fields
+  - Create parent directories on first write
+  - Handle permission errors gracefully
+
+- Config change propagation:
+  - Web viewer owns all config modifications
+  - Config changes must propagate immediately to UI
+  - Check timer_menu_item exists before updating
+  - Update menubar display immediately on interval change
+  - Restart monitoring if interval changes during active monitoring
+  - Clear menu item references during cleanup
+
+- Menubar Lifecycle Management
+  - Initialize all menu items in setup_menu() before use
+  - Never assume menu items exist after stopping monitoring
+  - Clear references to menu items during cleanup
+  - Handle quick start/stop cycles gracefully
+  - Check menu item existence before access
+  - Example error case: timer_menu_item.title access after monitoring stops
+
+- Race condition prevention:
+  - Web viewer validates before saving
+  - Menubar app reloads on timer
+  - Use atomic writes for config updates
+  - Watch for external config changes
+
+- Race condition prevention:
+  - Web viewer validates before saving
+  - Menubar app reloads on timer
+  - Use atomic writes for config updates
+  - Watch for external config changes
+
+- Error handling:
+  - Always check config file exists
+  - Initialize with defaults if missing
+  - Log config load/save errors
+  - Provide clear error messages
+
 - Research topic handling:
   - Source research topics from user config, not window context
   - Use configured topics to guide Claude analysis
@@ -175,6 +427,27 @@ Notes folder (Location set by user):
 - manicode is fairly expensive, but can do a lot in one go, so should be called less and asked to do more each time.
 
 ## Logging Patterns
+
+### Debug Logging
+- Log all state transitions:
+  - Start/stop of key operations (monitoring, analysis)
+  - Before/after values for config changes
+  - Entry/exit of long-running operations
+  - Failures and fallback behavior
+  - Config changes with old/new values
+  - Monitoring lifecycle events (start, stop, interval changes)
+  - Settings changes with new values
+- Include timing information where relevant
+- Use consistent format: "[DEBUG] Operation: detail"
+- Log both old and new values for config changes
+- Log complete lifecycle of features (start, stop, pause)
+- Debug logging patterns:
+  - Config changes: "[DEBUG] Config changed - old interval: X, new interval: Y"
+  - Settings updates: "[DEBUG] Settings: changing interval to X"
+  - Monitoring lifecycle: "[DEBUG] Starting monitoring loop with interval: X"
+  - Monitoring state: "[DEBUG] Stopping monitoring"
+
+### Analysis Logging
 - Store complete context with each log entry:
   - Raw inputs (screenshots, PDFs, window info)
   - Processing steps (OCR text, prompts) 
@@ -211,6 +484,14 @@ Notes folder (Location set by user):
 - Use browser-native UI components in web context
 - Keep menubar icon simple but informative (📸 idle, 👁️ monitoring)
 - Show status in icon title, not menu
+
+### Menubar Lifecycle Management
+- Initialize all menu items in setup_menu() before use
+- Never assume menu items exist after stopping monitoring
+- Clear references to menu items during cleanup
+- Handle quick start/stop cycles gracefully
+- Check menu item existence before access
+- Example error case: timer_menu_item.title access after monitoring stops
 
 ### Web Viewer
 - Full-width entries with consistent layout:

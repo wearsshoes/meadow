@@ -10,11 +10,11 @@ import string
 from datetime import datetime
 import base64
 import hashlib
-import keyring
 from PIL import Image
 from flask import Flask, render_template_string, request, jsonify, redirect, render_template
 from meadow.ui.menubar_app import MenubarApp
 from meadow.core.pdf_analyzer import PDFAnalyzer
+from meadow.core.config import Config
 
 app = Flask(__name__,
            template_folder=os.path.join(os.path.dirname(__file__), 'templates'),
@@ -204,33 +204,32 @@ def view_logs():
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
     """Handle settings page and form submission"""
-    app_dir = os.path.expanduser('~/Library/Application Support/Meadow')
-    config_path = os.path.join(app_dir, 'config', 'config.json')
+    config = Config()
 
     if request.method == 'POST':
         try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                config = json.load(f)
+            updates = {}
 
             if 'interval' in request.form:
                 new_interval = int(request.form['interval'])
                 if new_interval > 0:
-                    config['interval'] = new_interval
+
+                    updates['interval'] = new_interval
 
             if 'research_topics' in request.form:
                 topics = [t.strip() for t in request.form['research_topics'].split('\n') if t.strip()]
-                config['research_topics'] = topics
+                updates['research_topics'] = topics
 
             if 'screenshot_dir' in request.form:
                 new_dir = request.form['screenshot_dir']
                 if new_dir:
-                    config['screenshot_dir'] = new_dir
+                    updates['screenshot_dir'] = new_dir
                     os.makedirs(new_dir, exist_ok=True)
 
             if 'notes_dir' in request.form:
                 new_dir = request.form['notes_dir']
                 if new_dir:
-                    config['notes_dir'] = new_dir
+                    updates['notes_dir'] = new_dir
                     # Create full notes structure when directory changes
                     menubarapp = MenubarApp()
                     menubarapp.create_notes_structure(new_dir)
@@ -238,26 +237,20 @@ def settings():
             if 'anthropic_api_key' in request.form:
                 api_key = request.form['anthropic_api_key']
                 if api_key:
-                    keyring.set_password("meadow", "anthropic_api_key", api_key)
-                    # Don't store API key in config file
-                    config.pop('anthropic_api_key', None)
+                    config.set_api_key(api_key)
 
-            with open(config_path, 'w', encoding='utf-8') as f:
-                json.dump(config, f)
+            config.update(updates)
             return '', 204
         except (ValueError, KeyError):
             pass
 
-    with open(config_path, 'r', encoding='utf-8') as f:
-        config = json.load(f)
-
-    # Get stored API key
-    stored_api_key = keyring.get_password("meadow", "anthropic_api_key") or os.environ.get('ANTHROPIC_API_KEY', '')
+    stored_api_key = config.get_api_key() or os.environ.get('ANTHROPIC_API_KEY', '')
 
     template_path = os.path.join(os.path.dirname(__file__), 'templates', 'settings.html')
     with open(template_path, 'r', encoding='utf-8') as f:
         template_content = f.read()
-    return render_template_string(template_content, interval=config['interval'], config=config, stored_api_key=bool(stored_api_key))
+    config_dict = config.get_all()
+    return render_template_string(template_content, interval=config_dict['interval'], config=config_dict, stored_api_key=bool(stored_api_key))
 
 def shutdown_viewer():
     """Shutdown the Flask server and cleanup resources"""
