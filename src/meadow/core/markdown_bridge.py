@@ -18,7 +18,7 @@ class MarkdownBridge:
         for log in logs:
             # Create a markdown file for each log entry
             timestamp = datetime.strptime(log['timestamp'], '%Y-%m-%d %H:%M:%S')
-            filename = f"log_{timestamp.strftime('%Y%m%d_%H%M%S')}.knowledge.md"
+            filename = f"log_{timestamp.strftime('%Y%m%d_%H%M%S')}.md"
             filepath = os.path.join(self.lognotes_dir, filename)
 
             with open(filepath, 'w', encoding='utf-8') as f:
