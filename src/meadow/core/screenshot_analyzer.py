@@ -81,6 +81,25 @@ def analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, l
     try:
         ocr_text = ocr_processor.get_text_from_image(screenshot, image_path)
 
+        # Get research topics from config
+        config_path = os.path.join(os.path.expanduser('~/Library/Application Support/Meadow'), 'config', 'config.json')
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                research_topics = config.get('research_topics', ['civic government'])
+        except (FileNotFoundError, json.JSONDecodeError):
+            research_topics = ['civic government']
+
+        # Check topic relevance
+        from meadow.core.topic_similarity import check_topic_relevance
+        if not check_topic_relevance(ocr_text, research_topics):
+            print("Content not relevant to research topics")
+            try:
+                os.remove(image_path)  # Clean up irrelevant screenshot
+            except OSError:
+                pass  # Ignore cleanup errors
+            return None
+
         # Read the saved PNG for Claude API
         with open(image_path, 'rb') as f:
             img_str = base64.b64encode(f.read()).decode()

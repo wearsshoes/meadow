@@ -117,6 +117,31 @@ Cleanup and Backups
 - Logs are automatically split by date for better organization
 - `git commit` frequently to avoid data disasters!
 
+## Topic Similarity Implementation
+
+### Architecture
+- Primary: Apple NLEmbedding via pyobjc
+- Fallback: sentence-transformers with all-MiniLM-L6-v2 model
+- Threshold-based filtering (default 0.5)
+
+### Integration Points
+- Checks similarity before Claude API call
+- Uses research topics from config
+- Cleans up irrelevant screenshots
+- Logs similarity decisions
+
+### Testing Strategy
+- Test both embedding backends
+- Verify thresholds
+- Use real screenshots
+- Test error cases
+
+### Future Improvements
+- Tune threshold based on user feedback
+- Add similarity score to logs
+- Consider other embedding models
+- Add topic-specific thresholds
+
 ## Writing Guidelines
 
 Machine Notes

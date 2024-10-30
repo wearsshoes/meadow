@@ -14,6 +14,16 @@ A macOS menubar app that acts as an AI research assistant by analyzing your scre
   - runs the monitoring loop and saves logs
 - screenshot_analyzer.py
   - analyzes screenshots and extracts text
+  - filters content by topic relevance before analysis
+- topic_similarity.py
+  - uses Apple NLEmbedding for topic matching
+  - falls back to sentence-transformers if unavailable
+  - filters irrelevant content before API calls
+  - filters content by topic relevance before analysis
+- topic_similarity.py
+  - uses Apple NLEmbedding for topic matching
+  - falls back to sentence-transformers if unavailable
+  - filters irrelevant content before API calls
 - pdf_analyzer.py
   - analyzes PDFs and extracts content
 - manicode_wrapper.py
@@ -60,6 +70,22 @@ Notes folder (Location set by user):
       research/                               # User knowledge space
       meadow_notes.knowledge.md               # Overall description of research folder
 ```
+
+## Topic Filtering Architecture
+- Pre-filter content using embeddings before Claude API
+- Primary: Apple's NLEmbedding framework
+- Fallback: sentence-transformers (all-MiniLM-L6-v2)
+- Configurable similarity threshold
+- Reduces API costs by filtering irrelevant content early
+- Cleans up irrelevant screenshots automatically
+
+## Topic Filtering Architecture
+- Pre-filter content using embeddings before Claude API
+- Primary: Apple's NLEmbedding framework
+- Fallback: sentence-transformers (all-MiniLM-L6-v2)
+- Configurable similarity threshold
+- Reduces API costs by filtering irrelevant content early
+- Cleans up irrelevant screenshots automatically
 
 ## Dependencies
 - rumps - macOS menubar app framework
