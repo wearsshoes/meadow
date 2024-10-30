@@ -85,6 +85,18 @@ Notes folder (Location set by user):
   - Clean up irrelevant screenshots at exit
   - Save to temp location until analysis complete
   - Move to permanent storage only after confirming research relevance
+  - Testing considerations:
+    - Verify window capture with fallback to full screen
+    - Confirm temp file cleanup on irrelevant content
+    - Check permanent storage path for relevant content
+    - Test file permissions and directory creation
+    - Validate file naming patterns and uniqueness
+  - Testing considerations:
+    - Verify window capture with fallback to full screen
+    - Confirm temp file cleanup on irrelevant content
+    - Check permanent storage path for relevant content
+    - Test file permissions and directory creation
+    - Validate file naming patterns and uniqueness
 
 - Timestamp handling:
   - Record actual timestamps for API calls
@@ -107,6 +119,11 @@ Notes folder (Location set by user):
   - Skip automatic screenshots of Meadow's own interface
   - Handle macOS window detection edge cases:
     - "Window Server StatusIndicator" often appears instead of real app name
+    - "Cursor" appears when window focus is ambiguous
+    - Testing considerations:
+      - Mock window list must include kCGWindowLayer: 0
+      - Window focus state affects app name detection
+      - Full screen capture may be more reliable than window detection
     - Most common during manual captures
 
 - Data processing:
@@ -261,6 +278,46 @@ Notes folder (Location set by user):
    - Troubleshooting section
    - API key setup walkthrough
    - Add screenshots/demo video
+
+### Testing Plan
+
+1. Unit Tests
+   - OCR Processing
+     - Vision framework text extraction
+     - EasyOCR fallback when Vision fails
+     - Queue management for EasyOCR
+     - Image format handling (CGImage, PNG)
+     - Error handling and recovery
+   - Screenshot Management
+     - Window capture vs full screen fallback
+     - Temp file creation and cleanup
+     - Permanent storage for relevant screenshots
+   - Analysis Pipeline
+     - Claude API integration
+     - XML response parsing
+     - Research topic matching
+     - Log file management
+
+2. Integration Tests
+   - Full screenshot capture → OCR → analysis pipeline
+   - PDF upload → analysis → note generation
+   - Web viewer log display and filtering
+   - Settings persistence and reload
+   - Menubar monitoring lifecycle
+
+3. System Tests
+   - macOS permissions handling
+   - Multi-monitor support
+   - Resource usage under load
+   - Crash recovery
+   - API key management
+
+4. Performance Tests
+   - OCR method comparison benchmarks
+   - Screenshot capture timing
+   - Analysis pipeline latency
+   - Memory usage patterns
+   - API response times
 
 ### Nice to Have
 

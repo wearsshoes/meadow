@@ -79,6 +79,52 @@ Initial testing between EasyOCR and macOS Vision framework:
 - Skip timestamps in logs
 - Focus on OCR method selection over performance details
 
+## Testing Patterns
+
+### Test Image Creation
+- Use 400x100px white background
+- Place text in center (around 50,40)
+- Use simple test strings like "TEST"
+- Avoid font size parameters (not supported)
+- Save to test_data/ subdirectory
+- Clean up test files in tearDown
+
+### Vision Framework Testing
+- Mock both VNRecognizeTextRequest and VNImageRequestHandler
+- Mock observation.text() return value
+- Mock handler.performRequests_error_ return value
+- Test error cases by raising exceptions
+- Mock at module level where function is imported (e.g. 'meadow.core.monitor.CGWindowListCopyWindowInfo')
+- Use actual Quartz constants in mock data (kCGWindowOwnerName, etc)
+
+### EasyOCR Testing  
+- Test as fallback when Vision fails
+- Verify text detection rather than exact matches
+- Check queue state before/after processing
+- Clean up reader instance between tests
+- Keep tests focused due to slow initialization
+- Avoid multiple EasyOCR calls in same test
+
+### Test Image Creation
+- Use 400x100px white background
+- Place text in center (around 50,40)
+- Use simple test strings like "TEST"
+- Avoid font size parameters (not supported)
+- Save to test_data/ subdirectory
+- Clean up test files in tearDown
+
+### Vision Framework Testing
+- Mock both VNRecognizeTextRequest and VNImageRequestHandler
+- Mock observation.text() return value
+- Mock handler.performRequests_error_ return value
+- Test error cases by raising exceptions
+
+### EasyOCR Testing  
+- Test as fallback when Vision fails
+- Verify text detection rather than exact matches
+- Check queue state before/after processing
+- Clean up reader instance between tests
+
 ## Development Notes
 - Vision/Quartz imports may show as missing in pylint
 - These are valid imports on macOS despite pylint errors
