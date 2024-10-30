@@ -5,6 +5,8 @@ import io
 import re
 import json
 import os
+import queue
+import threading
 import numpy as np
 from PIL import Image
 import easyocr
@@ -12,12 +14,18 @@ from anthropic import Anthropic, AnthropicError
 
 # Initialize OCR reader once as a module-level singleton
 _ocr_reader = None
+_ocr_queue = queue.Queue()
+_ocr_lock = threading.Lock()
+
+# Initialize OCR reader once as a module-level singleton
+_ocr_reader = None
 
 def get_ocr_reader():
     """Get or initialize the OCR reader singleton"""
     global _ocr_reader
-    if _ocr_reader is None:
-        _ocr_reader = easyocr.Reader(['en'])
+    with _ocr_lock:
+        if _ocr_reader is None:
+            _ocr_reader = easyocr.Reader(['en'])
     return _ocr_reader
 
 def analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, log_path):
@@ -25,10 +33,17 @@ def analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, l
     # Get the singleton OCR reader
     reader = get_ocr_reader()
 
-    # Extract text from image
+    # Extract text from image using queue
     img_array = np.array(screenshot)
-    ocr_text = reader.readtext(img_array, detail=0)
-    ocr_text = ' '.join(ocr_text)
+    print(f"[DEBUG] Waiting for OCR queue at {timestamp}")
+    _ocr_queue.put(True)  # Add request to queue
+    try:
+        print(f"[DEBUG] Starting OCR at {timestamp}")
+        ocr_text = reader.readtext(img_array, detail=0)
+        ocr_text = ' '.join(ocr_text)
+        print(f"[DEBUG] Completed OCR at {timestamp}")
+    finally:
+        _ocr_queue.get()  # Remove request from queue
     try:
         # Resize to max dimension of 1024 while preserving aspect ratio
         max_size = 1024
@@ -85,6 +100,7 @@ Analyze the screenshot and return your response in XML format with the following
 """
 
         # Include previous action in prompt
+        print(f"[DEBUG] Sending to Claude at {timestamp}")
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=1000,
@@ -108,6 +124,7 @@ Analyze the screenshot and return your response in XML format with the following
         )
 
         response = message.content[0].text if message.content else "<action>No description available</action><topic>none</topic><summary></summary>"
+        print(f"[DEBUG] Received Claude response at {timestamp}")
         try:
             def extract_tag(tag, text):
                 """Extract and unescape content from XML tag"""

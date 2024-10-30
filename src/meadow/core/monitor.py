@@ -106,11 +106,14 @@ def monitoring_loop(config, timer_menu_item, is_monitoring_ref, data_dir, set_ti
         set_title(f"👁️ {remaining}s" if is_monitoring_ref() else "📸")
         # Take screenshot on window change or interval
         if (current_window != last_window_info) or (time.time() >= next_screenshot):
+            print(f"[DEBUG] Window change detected or interval reached at {datetime.now().strftime('%H:%M:%S')}")
             # Skip if current window is Meadow
             if 'Meadow' in current_window['title']:
                 time.sleep(1)
                 continue
+            print(f"[DEBUG] Taking screenshot at {datetime.now().strftime('%H:%M:%S')}")
             screenshot, image_path, timestamp, window_info = take_screenshot(config['screenshot_dir'])
+            print(f"[DEBUG] Screenshot saved to {image_path}")
             today = datetime.now().strftime('%Y%m%d')
             log_path = os.path.join(data_dir, 'logs', f'log_{today}.json')
             threading.Thread(target=analyze_and_log_screenshot, args=(screenshot, image_path, timestamp, window_info, log_path)).start()
