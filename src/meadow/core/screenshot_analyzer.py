@@ -11,11 +11,54 @@ import numpy as np
 from PIL import Image
 import easyocr
 from anthropic import Anthropic, AnthropicError
+import Vision
+import Quartz
+import platform
 
 # Initialize OCR reader once as a module-level singleton
 _ocr_reader = None
 _ocr_queue = queue.Queue()
 _ocr_lock = threading.Lock()
+
+def get_vision_text(image):
+    """Extract text using macOS Vision framework"""
+    # Convert PIL image to CGImage
+    # Convert to RGB if not already
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+    
+    # Get raw bytes with known format
+    img_data = image.tobytes()
+    img_size = image.size
+    bytes_per_row = img_size[0] * 3  # 3 bytes per pixel for RGB
+    
+    img_provider = Quartz.CGDataProviderCreateWithData(None, img_data, len(img_data), None)
+    cg_image = Quartz.CGImageCreate(
+        img_size[0], img_size[1],
+        8, 24, bytes_per_row,  # 8 bits per component, 24 bits per pixel
+        Quartz.CGColorSpaceCreateDeviceRGB(),
+        Quartz.kCGBitmapByteOrderDefault,  # No alpha channel needed
+        img_provider, None, False, Quartz.kCGRenderingIntentDefault
+    )
+    
+    # Create Vision request
+    request = Vision.VNRecognizeTextRequest.alloc().init()
+    handler = Vision.VNImageRequestHandler.alloc().initWithCGImage_options_(cg_image, None)
+    
+    # Perform request
+    handler.performRequests_error_([request], None)
+    
+    # Extract text from observations
+    text = []
+    results = request.results() or []  # Handle case where results() is None
+    print(f"[DEBUG] Vision results count: {len(results)}")
+    for observation in results:
+        text.append(observation.text())
+    
+    if not text:
+        print("[DEBUG] No text found in Vision results")
+        raise ValueError("No text extracted from Vision framework")
+    return ' '.join(text)
 
 def get_ocr_reader():
     """Get or initialize the OCR reader singleton"""
@@ -31,17 +74,27 @@ def analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, l
     # Get the singleton OCR reader
     reader = get_ocr_reader()
 
-    # Extract text from image using queue
-    img_array = np.array(screenshot)
-    print(f"[DEBUG] Waiting for OCR queue at {timestamp}")
-    _ocr_queue.put(True)  # Add request to queue
+    # Try Vision framework first, fall back to EasyOCR
     try:
-        print(f"[DEBUG] Starting OCR at {timestamp}")
-        ocr_text = reader.readtext(img_array, detail=0)
-        ocr_text = ' '.join(ocr_text)
-        print(f"[DEBUG] Completed OCR at {timestamp}")
-    finally:
-        _ocr_queue.get()  # Remove request from queue
+        if platform.mac_ver()[0] >= '11.0':  # Vision text recognition requires macOS 11+
+            print(f"[DEBUG] Starting Vision OCR at {timestamp}")
+            ocr_text = get_vision_text(screenshot)
+            print(f"[DEBUG] Completed Vision OCR at {timestamp}")
+        else:
+            raise ImportError("Vision framework not available")
+    except Exception as e:
+        print(f"[DEBUG] Vision OCR failed, falling back to EasyOCR: {e}")
+        # Extract text from image using queue
+        img_array = np.array(screenshot)
+        print(f"[DEBUG] Waiting for OCR queue at {timestamp}")
+        _ocr_queue.put(True)  # Add request to queue
+        try:
+            print(f"[DEBUG] Starting OCR at {timestamp}")
+            ocr_text = reader.readtext(img_array, detail=0)
+            ocr_text = ' '.join(ocr_text)
+            print(f"[DEBUG] Completed OCR at {timestamp}")
+        finally:
+            _ocr_queue.get()  # Remove request from queue
     try:
         # Resize to max dimension of 1024 while preserving aspect ratio
         max_size = 1024

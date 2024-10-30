@@ -37,6 +37,7 @@ setup(
     install_requires=[
         'numpy>=1.26.0',
         'anthropic>=0.37.1',
+        'pyobjc-framework-Vision>=10.3.1',
         'Flask>=3.0.3',
         'Pillow>=11.0.0',
         'pyobjc-framework-Quartz>=10.3.1',

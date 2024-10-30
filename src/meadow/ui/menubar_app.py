@@ -23,9 +23,14 @@ class MenubarApp(rumps.App):
 
     def __init__(self):
         print("[DEBUG] Initializing MenubarApp...")
-        self.timer_menu_item = None  # Initialize before super().__init__
-        self.config = None  # Initialize config attribute
-        super().__init__("📸")  # Default icon when not monitoring
+        try:
+            self.timer_menu_item = None  # Initialize before super().__init__
+            self.config = None  # Initialize config attribute
+            super().__init__("📸")  # Default icon when not monitoring
+            print("[DEBUG] MenubarApp initialized successfully")
+        except Exception as e:
+            print(f"[ERROR] Failed to initialize MenubarApp: {e}")
+            raise
         self.setup_config()
         self.setup_menu()
         self.is_monitoring = False
