@@ -1,111 +1,86 @@
 """Module for analyzing screenshots using Claude API"""
 
 import base64
-import io
 import re
 import json
 import os
 import queue
 import threading
-import numpy as np
-from PIL import Image
+
+import Vision
 import easyocr
 from anthropic import Anthropic, AnthropicError
-import Vision
-import Quartz
-import platform
 
-# Initialize OCR reader once as a module-level singleton
-_ocr_reader = None
-_ocr_queue = queue.Queue()
-_ocr_lock = threading.Lock()
+class OCRProcessor:
+    """Handles OCR processing with fallback options"""
+    def __init__(self):
+        self._ocr_reader = None
+        self._ocr_queue = queue.Queue()
+        self._ocr_lock = threading.Lock()
 
-def get_vision_text(image):
-    """Extract text using macOS Vision framework"""
-    # Convert PIL image to CGImage
-    # Convert to RGB if not already
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
-    
-    # Get raw bytes with known format
-    img_data = image.tobytes()
-    img_size = image.size
-    bytes_per_row = img_size[0] * 3  # 3 bytes per pixel for RGB
-    
-    img_provider = Quartz.CGDataProviderCreateWithData(None, img_data, len(img_data), None)
-    cg_image = Quartz.CGImageCreate(
-        img_size[0], img_size[1],
-        8, 24, bytes_per_row,  # 8 bits per component, 24 bits per pixel
-        Quartz.CGColorSpaceCreateDeviceRGB(),
-        Quartz.kCGBitmapByteOrderDefault,  # No alpha channel needed
-        img_provider, None, False, Quartz.kCGRenderingIntentDefault
-    )
-    
-    # Create Vision request
-    request = Vision.VNRecognizeTextRequest.alloc().init()
-    handler = Vision.VNImageRequestHandler.alloc().initWithCGImage_options_(cg_image, None)
-    
-    # Perform request
-    handler.performRequests_error_([request], None)
-    
-    # Extract text from observations
-    text = []
-    results = request.results() or []  # Handle case where results() is None
-    print(f"[DEBUG] Vision results count: {len(results)}")
-    for observation in results:
-        text.append(observation.text())
-    
-    if not text:
-        print("[DEBUG] No text found in Vision results")
-        raise ValueError("No text extracted from Vision framework")
-    return ' '.join(text)
+    def _get_easyocr_reader(self):
+        """Get or initialize the OCR reader singleton"""
+        with self._ocr_lock:
+            if self._ocr_reader is None:
+                self._ocr_reader = easyocr.Reader(['en'])
+        return self._ocr_reader
 
-def get_ocr_reader():
-    """Get or initialize the OCR reader singleton"""
-    # pylint: disable=global-statement
-    global _ocr_reader
-    with _ocr_lock:
-        if _ocr_reader is None:
-            _ocr_reader = easyocr.Reader(['en'])
-    return _ocr_reader
+    def get_text_from_image(self, cg_image, image_path):
+        """Extract text from image, trying Vision first then EasyOCR
+
+        Args:
+            cg_image: CGImage object for Vision OCR
+            image_path: Path to saved PNG for EasyOCR fallback
+        """
+        try:
+            raise Exception("Test")
+            print("[DEBUG] Using Vision OCR")
+            return self._get_vision_text(cg_image)
+        except Exception as e:
+            print(f"[DEBUG] Vision OCR failed, falling back to EasyOCR: {e}")
+            print("[DEBUG] Using EasyOCR")
+            return self._get_easyocr_text(image_path)
+
+    def _get_vision_text(self, cg_image):
+        """Extract text using macOS Vision framework"""
+        # pylint: disable=no-member
+        request = Vision.VNRecognizeTextRequest.alloc().init()
+        handler = Vision.VNImageRequestHandler.alloc().initWithCGImage_options_(cg_image, None)
+        handler.performRequests_error_([request], None)
+
+        text = []
+        results = request.results() or []
+        print(f"[DEBUG] Vision results count: {len(results)}")
+        for observation in results:
+            text.append(observation.text())
+
+        if not text:
+            print("[DEBUG] No text found in Vision results")
+            raise ValueError("No text extracted from Vision framework")
+        return ' '.join(text)
+
+    def _get_easyocr_text(self, image_path):
+        """Extract text using EasyOCR as fallback"""
+        reader = self._get_easyocr_reader()
+        self._ocr_queue.put(True)
+        try:
+            result = reader.readtext(image_path)
+            text_results = [text for _, text, _ in result]
+            return ' '.join(text_results)
+        finally:
+            self._ocr_queue.get()
+
+# Create singleton OCR processor
+ocr_processor = OCRProcessor()
 
 def analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, log_path):
     """Analyze screenshot using OCR and Claude API, then log the results"""
-    # Get the singleton OCR reader
-    reader = get_ocr_reader()
-
-    # Try Vision framework first, fall back to EasyOCR
     try:
-        if platform.mac_ver()[0] >= '11.0':  # Vision text recognition requires macOS 11+
-            print(f"[DEBUG] Starting Vision OCR at {timestamp}")
-            ocr_text = get_vision_text(screenshot)
-            print(f"[DEBUG] Completed Vision OCR at {timestamp}")
-        else:
-            raise ImportError("Vision framework not available")
-    except Exception as e:
-        print(f"[DEBUG] Vision OCR failed, falling back to EasyOCR: {e}")
-        # Extract text from image using queue
-        img_array = np.array(screenshot)
-        print(f"[DEBUG] Waiting for OCR queue at {timestamp}")
-        _ocr_queue.put(True)  # Add request to queue
-        try:
-            print(f"[DEBUG] Starting OCR at {timestamp}")
-            ocr_text = reader.readtext(img_array, detail=0)
-            ocr_text = ' '.join(ocr_text)
-            print(f"[DEBUG] Completed OCR at {timestamp}")
-        finally:
-            _ocr_queue.get()  # Remove request from queue
-    try:
-        # Resize to max dimension of 1024 while preserving aspect ratio
-        max_size = 1024
-        ratio = max_size / max(screenshot.size)
-        if ratio < 1:
-            new_size = tuple(int(dim * ratio) for dim in screenshot.size)
-            screenshot = screenshot.resize(new_size, Image.Resampling.LANCZOS)
+        ocr_text = ocr_processor.get_text_from_image(screenshot, image_path)
 
-        buffered = io.BytesIO()
-        screenshot.save(buffered, format="PNG")
-        img_str = base64.b64encode(buffered.getvalue()).decode()
+        # Read the saved PNG for Claude API
+        with open(image_path, 'rb') as f:
+            img_str = base64.b64encode(f.read()).decode()
 
         # Use config API key if available, otherwise fall back to environment variable
         api_key = None
@@ -151,7 +126,8 @@ Analyze the screenshot and return your response in XML format with the following
 """
 
         # Include previous action in prompt
-        print(f"[DEBUG] Sending to Claude at {timestamp}")
+        print("[DEBUG] Sending to Claude")
+
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=1000,
@@ -175,7 +151,7 @@ Analyze the screenshot and return your response in XML format with the following
         )
 
         response = message.content[0].text if message.content else "<action>No description available</action><topic>none</topic><summary></summary>"
-        print(f"[DEBUG] Received Claude response at {timestamp}")
+        print("[DEBUG] Received Claude response")
         try:
             def extract_tag(tag, text):
                 """Extract and unescape content from XML tag"""
@@ -208,7 +184,18 @@ Analyze the screenshot and return your response in XML format with the following
         # Skip if no research content
         if summary is None:
             print("Took a screenshot, but it was irrelevant to research.")
+            try:
+                os.remove(image_path)  # Clean up irrelevant screenshot
+            except OSError:
+                pass  # Ignore cleanup errors
             return None
+
+        # Move relevant screenshot to permanent storage
+        screenshot_dir = os.path.dirname(os.path.dirname(image_path))
+        perm_path = os.path.join(screenshot_dir, 'screenshots', f"screenshot_{timestamp.strftime('%Y%m%d_%H%M%S')}.png")
+        os.makedirs(os.path.dirname(perm_path), exist_ok=True)
+        os.rename(image_path, perm_path)
+        entry['image_path'] = perm_path  # Update path in log entry
 
         # Use dated log file
         log_dir = os.path.dirname(log_path)

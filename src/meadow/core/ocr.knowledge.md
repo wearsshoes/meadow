@@ -19,6 +19,27 @@ Initial testing between EasyOCR and macOS Vision framework:
 - Lower memory footprint (uses system resources)
 
 ## Implementation Strategy
+- Vision framework is primary OCR method
+  - Must be tried first for all inputs
+  - Never skip Vision unless it fails
+  - Fall back to EasyOCR only if Vision fails
+- Image format handling:
+  - Always pass both CGImage and PNG filepath together
+  - Never convert CGImage in memory
+  - Vision uses CGImage directly
+  - EasyOCR and Claude use PNG file
+  - Conversion between formats happens at capture time only
+- Image format requirements:
+  - Always pass both CGImage and PNG filepath together
+  - Never try to convert CGImage in memory
+  - Vision uses CGImage directly
+  - EasyOCR and Claude use PNG file
+  - Conversion between formats happens at capture time only
+- OCRProcessor class handles all text extraction
+  - Encapsulates both Vision and EasyOCR methods
+  - Maintains singleton pattern for EasyOCR reader
+  - Manages queuing for thread safety
+  - Provides single interface: get_text_from_image()
 - Use Vision framework as primary OCR on macOS 11+
 - Fall back to EasyOCR for:
   - Older macOS versions
@@ -51,3 +72,74 @@ Initial testing between EasyOCR and macOS Vision framework:
   - Multiple languages
   - Special characters
   - Various background colors
+
+## Logging Guidelines
+- Log OCR method in use: "[DEBUG] Using Vision OCR" or "[DEBUG] Using EasyOCR"
+- Log fallback cases with reason: "[DEBUG] Vision OCR failed, falling back to EasyOCR: {error}"
+- Skip timestamps in logs
+- Focus on OCR method selection over performance details
+
+## Development Notes
+- Vision/Quartz imports may show as missing in pylint
+- These are valid imports on macOS despite pylint errors
+- No need to suppress these warnings as they're macOS-specific modules
+- Import order: standard libs → third party → macOS frameworks
+
+### macOS Framework Import Patterns
+- UTType constants should be imported from Quartz.CoreServices:
+  ```python
+  from Quartz.CoreServices import kUTTypePNG
+  ```
+  - Available through Quartz.CoreServices module
+  - Provides access to deprecated CoreServices constants
+  - Required for image type identification
+
+### Development Environment
+- Use type hints and modern IDE for framework import warnings
+- Configure pylint/mypy for better static analysis:
+  ```ini
+  # setup.cfg
+  [mypy]
+  platform=darwin
+  python_version=3.9
+  
+  [pylint]
+  extension-pkg-whitelist=Quartz,CoreServices
+  ```
+- Consider using pyright for better macOS framework type checking
+## Image Format Requirements
+
+### Vision OCR
+- Requires CGImage input
+- Native macOS format, no conversion needed from Quartz capture
+- Must be valid CGImage instance, not CGImage data
+
+### EasyOCR
+- Accepts only:
+  - File path (string) - PREFERRED
+  - URL (string) 
+  - Raw bytes
+  - Numpy array
+- Prefer using file paths when possible:
+  - Most reliable method
+  - Avoids memory manipulation issues
+  - Simplifies error handling
+  - Lets EasyOCR handle image loading
+- Cannot process CGImage directly
+- Convert CGImage using:
+  ```python
+  np_array = np.frombuffer(CGDataProviderCopyData(cg_image), dtype=np.uint8)
+  ```
+
+### Image Saving
+- Any format that supports np.array can be used
+- PIL not required, can save directly from numpy array
+- CGImage can be saved directly using ImageIO framework
+
+### Best Practices
+- Keep native CGImage format throughout Vision OCR path
+- For EasyOCR, save CGImage to temporary file and pass the path
+- Avoid direct memory manipulation when possible
+- Avoid unnecessary PIL conversions
+- Use native frameworks for saving when possible
+- Handle format conversion in OCRProcessor class, not in calling code

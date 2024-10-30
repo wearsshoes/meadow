@@ -5,7 +5,8 @@ import os
 import threading
 import time
 from datetime import datetime
-from PIL import ImageGrab, Image
+from PIL import ImageGrab
+
 from Quartz import (
     CGWindowListCopyWindowInfo,
     kCGWindowListOptionOnScreenOnly,
@@ -16,14 +17,12 @@ from Quartz import (
     kCGWindowName,
     CGWindowListCreateImage,
     CGRectNull,
+    NSURL,
     kCGWindowListOptionIncludingWindow,
-    CGImageGetWidth,
-    CGImageGetHeight,
-    CGImageGetDataProvider,
-    CGDataProviderCopyData,
-    CGImageGetBytesPerRow
+    CGImageDestinationCreateWithURL,
+    CGImageDestinationFinalize,
+    CGImageDestinationAddImage,
 )
-import numpy as np
 
 from meadow.core.screenshot_analyzer import analyze_and_log_screenshot
 
@@ -53,47 +52,46 @@ def take_screenshot(data_dir):
     # Get the active window info
     window_info = get_active_window_info()
     screenshot = None
-    try:
-        # Find the window ID for the active window
-        window_list = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID)
-        window_id = None
-        for window in window_list:
-            if (window.get(kCGWindowOwnerName) == window_info['app'] and
-                window.get(kCGWindowName) == window_info['title']):
-                window_id = window.get('kCGWindowNumber')
-                break
+    # Find the window ID for the active window
+    window_list = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID)
+    window_id = None
+    for window in window_list:
+        if (window.get(kCGWindowOwnerName) == window_info['app'] and
+            window.get(kCGWindowName) == window_info['title']):
+            window_id = window.get('kCGWindowNumber')
+            break
 
-        if window_id:
-            # Capture just this window using native API
-            cg_image = CGWindowListCreateImage(
-                CGRectNull,  # Null rect means capture the whole window
-                kCGWindowListOptionIncludingWindow,  # Only capture the specified window
-                window_id,  # The window to capture
-                0  # No image options
-            )
-            if cg_image:
-                # Convert CG image to PIL Image
-                width = CGImageGetWidth(cg_image)
-                height = CGImageGetHeight(cg_image)
-                data = CGDataProviderCopyData(CGImageGetDataProvider(cg_image))
-                bytes_per_row = CGImageGetBytesPerRow(cg_image)
-                np_array = np.frombuffer(data, dtype=np.uint8).reshape((height, bytes_per_row // 4, 4))
-                screenshot = Image.fromarray(np_array[:,:,:3])  # Drop alpha channel
-
-        if screenshot is None:  # Fallback to full screen if window capture fails
-            print("[DEBUG] Failed to capture active window. Capturing entire screen.")
-            screenshot = ImageGrab.grab(all_screens=False)
-        timestamp = datetime.now()
-        window_info = get_active_window_info()
-        screenshot_dir = os.path.join(data_dir, 'screenshots')
-        os.makedirs(screenshot_dir, exist_ok=True)
-        image_path = os.path.join(screenshot_dir, f"screenshot_{timestamp.strftime('%Y%m%d_%H%M%S')}.png")
-        screenshot.save(image_path)
-        return screenshot, image_path, timestamp, window_info
-    except Exception as e:
-        if screenshot:
-            screenshot.close()
-        raise e
+    if window_id:
+        # Capture just this window using native API
+        cg_image = CGWindowListCreateImage(
+            CGRectNull,  # Null rect means capture the whole window
+            kCGWindowListOptionIncludingWindow,  # Only capture the specified window
+            window_id,  # The window to capture
+            0  # No image options
+        )
+        if cg_image:
+            screenshot = cg_image
+    if screenshot is None:  # Fallback to full screen if window capture fails
+        print("[DEBUG] Failed to capture active window. Capturing entire screen.")
+        screenshot = ImageGrab.grab(all_screens=False)
+    timestamp = datetime.now()
+    window_info = get_active_window_info()
+    screenshot_dir = os.path.join(data_dir, 'screenshots')
+    os.makedirs(screenshot_dir, exist_ok=True)
+    # Save to temp location first
+    temp_dir = os.path.join(data_dir, 'temp')
+    os.makedirs(temp_dir, exist_ok=True)
+    temp_path = os.path.join(temp_dir, f"temp_{timestamp.strftime('%Y%m%d_%H%M%S')}.png")
+    # Save CGImage directly to PNG
+    destination = CGImageDestinationCreateWithURL(
+            NSURL.fileURLWithPath_(temp_path),
+        "public.png",  # Use the UTI string directly
+        1,
+        None
+    )
+    CGImageDestinationAddImage(destination, screenshot, None)
+    CGImageDestinationFinalize(destination)
+    return screenshot, temp_path, timestamp, window_info
 
 def monitoring_loop(config, timer_menu_item, is_monitoring_ref, data_dir, set_title):
     """Main monitoring loop"""

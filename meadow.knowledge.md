@@ -79,6 +79,18 @@ Notes folder (Location set by user):
 ## Core Design Principles
 
 ### Architecture Patterns
+
+- Screenshot lifecycle management:
+  - Only save screenshots permanently if relevant to research
+  - Clean up irrelevant screenshots at exit
+  - Save to temp location until analysis complete
+  - Move to permanent storage only after confirming research relevance
+
+- Timestamp handling:
+  - Record actual timestamps for API calls
+  - Capture separate timestamps for request and response
+  - Skip timestamps in OCR logging
+  - Focus logging on method selection over timing
 - Separate UI concerns from configuration management
   - Web interface handles all config modifications
   - Menubar app has read-only access to config
