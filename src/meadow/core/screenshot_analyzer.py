@@ -19,7 +19,6 @@ def analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, l
     img_array = np.array(screenshot)
     ocr_text = reader.readtext(img_array, detail=0)
     ocr_text = ' '.join(ocr_text)
-    print("OCR extracted text:", ocr_text)
     try:
         # Resize to max dimension of 1024 while preserving aspect ratio
         max_size = 1024
@@ -52,6 +51,8 @@ def analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, l
                 prev_window = logs[-1]['window'] if logs else "N/A"
                 prev_description = logs[-1]['description'] if logs else "N/A"
         except (FileNotFoundError, json.JSONDecodeError, IndexError):
+            prev_app = "N/A"
+            prev_window = "N/A"
             prev_description = "N/A"
 
         # Get research topics from config
