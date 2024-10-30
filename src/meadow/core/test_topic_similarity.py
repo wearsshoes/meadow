@@ -18,27 +18,14 @@ class TestTopicSimilarity(unittest.TestCase):
         and eggs. Mix well and bake at 350 degrees.
         """
 
-    def test_apple_embeddings(self):
-        """Test similarity detection using Apple NLEmbedding"""
-        try:
-            from meadow.core.topic_similarity import get_similarity_score
-            score1 = get_similarity_score(self.test_text, self.test_topics)
-            score2 = get_similarity_score(self.unrelated_text, self.test_topics)
-
-            self.assertGreater(score1, 0.5, "Related text should have high similarity")
-            self.assertLess(score2, 0.3, "Unrelated text should have low similarity")
-        except ImportError:
-            self.skipTest("Apple NLEmbedding not available")
-
     def test_fallback_embeddings(self):
-        """Test similarity detection using fallback embeddings"""
-        with patch('meadow.core.topic_similarity.use_apple_embeddings', return_value=False):
-            from meadow.core.topic_similarity import get_similarity_score
-            score1 = get_similarity_score(self.test_text, self.test_topics)
-            score2 = get_similarity_score(self.unrelated_text, self.test_topics)
+        """Test similarity detection using sentence-transformers"""
+        from meadow.core.topic_similarity import get_similarity_score
+        score1 = get_similarity_score(self.test_text, self.test_topics)
+        score2 = get_similarity_score(self.unrelated_text, self.test_topics)
 
-            self.assertGreater(score1, 0.5, "Related text should have high similarity")
-            self.assertLess(score2, 0.3, "Unrelated text should have low similarity")
+        self.assertGreater(score1, 0.5, "Related text should have high similarity")
+        self.assertLess(score2, 0.3, "Unrelated text should have low similarity")
 
     def test_threshold_config(self):
         """Test similarity threshold configuration"""

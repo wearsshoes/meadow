@@ -73,8 +73,7 @@ Notes folder (Location set by user):
 
 ## Topic Filtering Architecture
 - Pre-filter content using embeddings before Claude API
-- Primary: Apple's NLEmbedding framework
-- Fallback: sentence-transformers (all-MiniLM-L6-v2)
+- Uses sentence-transformers (all-MiniLM-L6-v2) for embeddings
 - Configurable similarity threshold
 - Reduces API costs by filtering irrelevant content early
 - Cleans up irrelevant screenshots automatically
@@ -260,6 +259,12 @@ Notes folder (Location set by user):
   - Config changes with old/new values
   - Monitoring lifecycle events (start, stop, interval changes)
   - Settings changes with new values
+- Avoid repetitive logging:
+  - Log state changes once, not per iteration
+  - Use counters for repeated operations
+  - Summarize batch operations instead of logging each item
+  - Only log meaningful state changes
+  - Example: "Processed 5 items" vs "Processing item 1... Processing item 2..."
 - Include timing information where relevant
 - Use consistent format: "[DEBUG] Operation: detail"
 - Log both old and new values for config changes

@@ -113,15 +113,29 @@ Privacy Handling
 - Use appropriate detail level in references
 
 Cleanup and Backups
-- Mark the now-processed JSON logs for archiving by setting "processed" to True
-- Logs are automatically split by date for better organization
-- `git commit` frequently to avoid data disasters!
 
 ## Topic Similarity Implementation
 
 ### Architecture
-- Primary: Apple NLEmbedding via pyobjc
-- Fallback: sentence-transformers with all-MiniLM-L6-v2 model
+- Using sentence-transformers (all-MiniLM-L6-v2) for embeddings
+  - Chosen for reliability and cross-platform support
+  - Well-documented and maintained model
+  - Good performance for semantic similarity tasks
+  - Lazy loading minimizes memory impact
+  - Consistent results across operating systems
+  - Model loaded only when first needed
+Note: Previously attempted Apple NLEmbedding but removed due to:
+  - Unstable API and documentation gaps
+  - Platform lock-in (macOS only)
+  - No clear performance advantage
+  - Implementation complexity
+- Mark the now-processed JSON logs for archiving by setting "processed" to True
+- Logs are automatically split by date for better organization
+- `git commit` frequently to avoid data disasters!
+- Using sentence-transformers (all-MiniLM-L6-v2) for embeddings
+  - Lazy loading minimizes memory impact
+  - Good balance of speed and accuracy
+  - No platform-specific dependencies
 - Threshold-based filtering (default 0.5)
 
 ### Integration Points
