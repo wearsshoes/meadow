@@ -124,6 +124,10 @@ Cleanup and Backups
   - Lazy loading minimizes memory impact
   - Consistent results across operating systems
   - Model loaded only when first needed
+  - Known inefficiency: Currently calculates embeddings 3x per check
+    - Once for input text
+    - Once per research topic
+    - Future optimization: Cache embeddings for topics
 Note: Previously attempted Apple NLEmbedding but removed due to:
   - Unstable API and documentation gaps
   - Platform lock-in (macOS only)

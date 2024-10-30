@@ -13,6 +13,7 @@ from meadow.core.monitor import monitoring_loop, take_screenshot
 from meadow.core.markdown_bridge import process_analysis_result, process_saved_logs
 from meadow.core.config import Config
 from meadow.core.manicode_wrapper import execute_manicode
+from meadow.core.topic_similarity import initialize_model
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-locals
@@ -135,11 +136,14 @@ class MenubarApp(rumps.App):
     @rumps.clicked("Analyze Current Window")
     def take_screenshot_and_analyze(self, _):
         """Take and analyze a screenshot of the current window."""
+        # Initialize model before analysis
         self.title = "📸 Analyzing..."
         screenshot, image_path, timestamp, window_info = take_screenshot(self.data_dir)
         log_path = self.get_current_log_path()
 
         def analyze_and_restore():
+            # Initialize model asynchronously
+            asyncio.run(initialize_model())
             analysis_result = analyze_and_log_screenshot(screenshot, image_path, timestamp, window_info, log_path)
             if analysis_result:
                 self.process_screenshot_analysis(analysis_result)
