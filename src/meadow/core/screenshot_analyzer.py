@@ -17,11 +17,9 @@ _ocr_reader = None
 _ocr_queue = queue.Queue()
 _ocr_lock = threading.Lock()
 
-# Initialize OCR reader once as a module-level singleton
-_ocr_reader = None
-
 def get_ocr_reader():
     """Get or initialize the OCR reader singleton"""
+    # pylint: disable=global-statement
     global _ocr_reader
     with _ocr_lock:
         if _ocr_reader is None:
